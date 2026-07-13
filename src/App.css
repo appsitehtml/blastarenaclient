@@ -121,49 +121,70 @@ canvas {
   background: rgba(10, 10, 15, 0.88);
   color: white;
   z-index: 50;
-  backdrop-filter: blur(8px);
 }
 
 .chatMessages {
-  min-height: 62px;
+  min-height: 60px;
   margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.chatMessage {
-  padding: 7px 9px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow-wrap: anywhere;
-}
-
-.chatMessage strong {
-  margin-right: 5px;
-}
-
-.myMessage {
-  background: rgba(0, 208, 255, 0.2);
 }
 
 .chatForm {
   display: flex;
-  gap: 7px;
+  gap: 8px;
+  width: 100%;
 }
 
 .chatForm input {
   flex: 1;
+  width: 100%;
   min-width: 0;
-  padding: 9px;
+  padding: 10px 12px;
   border: none;
   border-radius: 8px;
+  font-size: 14px;
+  color: #111;
+  background: white;
   outline: none;
+  box-sizing: border-box;
 }
 
 .chatForm button {
-  padding: 9px 12px;
+  width: auto;
+  min-width: 80px;
+  padding: 10px 14px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+.powerInventory {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.powerInventory button {
+  padding: 8px 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.powerInventory .selectedPower {
+  border-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.trapMessage {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: rgba(150, 20, 20, 0.9);
+  color: white;
+  font-weight: bold;
+  z-index: 100;
 }
