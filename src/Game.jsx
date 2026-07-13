@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TILE = 48;
 
@@ -28,6 +28,15 @@ function Game({ socket, room, myPlayer }) {
         d: "right",
         D: "right"
       };
+
+      const element = document.activeElement;
+
+if (
+  element?.tagName === "INPUT" ||
+  element?.tagName === "TEXTAREA"
+) {
+  return;
+}
 
       if (keys[e.key]) {
         e.preventDefault();
@@ -101,15 +110,18 @@ function Game({ socket, room, myPlayer }) {
 
     // powerups
 
+    console.log(room.powerUps);
+
     room.powerUps?.forEach(power=>{
 
       const cx=power.x*TILE+24;
       const cy=power.y*TILE+24;
 
       if(power.type==="range") ctx.fillStyle="#ffcc00";
-      if(power.type==="bomb") ctx.fillStyle="#00d0ff";
-      if(power.type==="speed") ctx.fillStyle="#00ff88";
-      if(power.type==="shield") ctx.fillStyle="#ff55ff";
+if(power.type==="bomb") ctx.fillStyle="#00d0ff";
+if(power.type==="speed") ctx.fillStyle="#00ff88";
+if(power.type==="shield") ctx.fillStyle="#ff55ff";
+if(power.type==="kick") ctx.fillStyle="#ff8c00";
 
       ctx.beginPath();
       ctx.arc(cx,cy,12,0,Math.PI*2);
@@ -122,14 +134,15 @@ function Game({ socket, room, myPlayer }) {
       ctx.textAlign="center";
       ctx.textBaseline="middle";
 
-      const text={
-        range:"🔥",
-        bomb:"💣",
-        speed:"⚡",
-        shield:"🛡"
-      }
+      const text = {
+  range: "🔥",
+  bomb: "💣",
+  speed: "⚡",
+  shield: "🛡",
+  kick: "🥾"
+};
 
-      ctx.fillText(text[power.type],cx,cy+1);
+      ctx.fillText(text[power.type] || "?", cx, cy + 1);
 
     });
 
@@ -240,6 +253,19 @@ function Game({ socket, room, myPlayer }) {
 
   const bots=room.players.filter(p=>p.isBot&&p.alive).length;
 
+  const [chatText, setChatText] = useState("");
+
+  function sendChatMessage(event) {
+  event.preventDefault();
+
+  const text = chatText.trim();
+
+  if (!text) return;
+
+  socket.emit("sendMessage", text);
+  setChatText("");
+}
+
   return(
 
     <main className="gamePage">
@@ -296,6 +322,41 @@ function Game({ socket, room, myPlayer }) {
         height={11*TILE}
 
       />
+
+      <div className="gameChat">
+  <div className="chatMessages">
+    {(room.chatMessages || []).map(message => (
+      <div
+        key={message.id}
+        className={
+          message.playerId === socket.id
+            ? "chatMessage myMessage"
+            : "chatMessage"
+        }
+      >
+        <strong>{message.playerName}:</strong>
+        <span>{message.text}</span>
+      </div>
+    ))}
+  </div>
+
+  <form
+    className="chatForm"
+    onSubmit={sendChatMessage}
+  >
+    <input
+      type="text"
+      value={chatText}
+      onChange={event => setChatText(event.target.value)}
+      placeholder="Digite uma mensagem..."
+      maxLength={100}
+    />
+
+    <button type="submit">
+      Enviar
+    </button>
+  </form>
+</div>
 
     </main>
 

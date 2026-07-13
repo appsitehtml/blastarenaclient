@@ -109,3 +109,61 @@ canvas {
 .secondaryButton {
   background: #4da3ff;
 }
+
+.gameChat {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  width: 300px;
+  padding: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  background: rgba(10, 10, 15, 0.88);
+  color: white;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.chatMessages {
+  min-height: 62px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chatMessage {
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow-wrap: anywhere;
+}
+
+.chatMessage strong {
+  margin-right: 5px;
+}
+
+.myMessage {
+  background: rgba(0, 208, 255, 0.2);
+}
+
+.chatForm {
+  display: flex;
+  gap: 7px;
+}
+
+.chatForm input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+.chatForm button {
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
