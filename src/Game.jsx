@@ -388,67 +388,6 @@ const roomRef = useRef(room);
     }
 
     /*
-      BOMBAS
-    */
-    for (
-      const bomb of
-      currentRoom.bombs || []
-    ) {
-      const cx =
-        bomb.x * TILE + TILE / 2;
-
-      const cy =
-        bomb.y * TILE + TILE / 2;
-
-      ctx.fillStyle = "#111";
-
-      ctx.beginPath();
-
-      ctx.arc(
-        cx,
-        cy,
-        18,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.fill();
-
-      ctx.fillStyle = "#eee";
-
-      ctx.beginPath();
-
-      ctx.arc(
-        cx - 5,
-        cy - 6,
-        4,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.fill();
-
-      ctx.strokeStyle = "#ff8c00";
-      ctx.lineWidth = 2;
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        cx + 7,
-        cy - 10
-      );
-
-      ctx.lineTo(
-        cx + 12,
-        cy - 18
-      );
-
-      ctx.stroke();
-
-      ctx.lineWidth = 1;
-    }
-
-    /*
       EXPLOSÕES
     */
     for (
@@ -654,6 +593,46 @@ const roomRef = useRef(room);
 
       ctx.globalAlpha = 1;
     }
+
+    /*
+  BOMBAS — desenhadas por cima dos jogadores
+*/
+for (const bomb of currentRoom.bombs || []) {
+  const cx = bomb.x * TILE + TILE / 2;
+  const cy = bomb.y * TILE + TILE / 2;
+
+  // Contorno claro para destacar do fundo
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.fillStyle = "#111";
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Brilho
+  ctx.fillStyle = "#eeeeee";
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy - 6, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pavio
+  ctx.strokeStyle = "#ff8c00";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(cx + 7, cy - 11);
+  ctx.lineTo(cx + 13, cy - 19);
+  ctx.stroke();
+
+  // Faísca
+  ctx.fillStyle = "#ffd400";
+  ctx.beginPath();
+  ctx.arc(cx + 14, cy - 20, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.lineWidth = 1;
+}
 
     animationFrameRef.current =
       requestAnimationFrame(draw);
