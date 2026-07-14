@@ -237,7 +237,7 @@ const roomRef = useRef(room);
     previousTime = currentTime;
 
     const interpolation =
-      1 - Math.pow(0.001, deltaTime / 1000);
+      1 - Math.pow(0.000001, deltaTime / 1000);
 
     ctx.clearRect(
       0,
@@ -458,7 +458,7 @@ const roomRef = useRef(room);
           visual.targetY - visual.y
         );
 
-      if (distanceToTarget > 3) {
+      if (distanceToTarget > 1.5) {
         visual.x = visual.targetX;
         visual.y = visual.targetY;
       } else {
