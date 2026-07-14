@@ -13,6 +13,7 @@ function Game({ socket, room, myPlayer }) {
   const canvasRef = useRef(null);
   const visualPlayersRef = useRef(new Map());
 const animationFrameRef = useRef(null);
+const roomRef = useRef(room);
 
   const [selectedItem, setSelectedItem] = useState("bomb");
   const [trapMessage, setTrapMessage] = useState("");
@@ -121,11 +122,10 @@ const animationFrameRef = useRef(null);
       );
     };
   }, [
-    socket,
-    selectedItem,
-    myPlayer?.slowTrapCount,
-    myPlayer?.mineCount
-  ]);
+  socket,
+  selectedItem,
+  myPlayer?.slowTrapCount
+]);
 
   /*
     MENSAGENS DAS ARMADILHAS
@@ -158,13 +158,52 @@ const animationFrameRef = useRef(null);
     };
   }, [socket]);
 
+  useEffect(() => {
+  roomRef.current = room;
+
+  const visualPlayers =
+    visualPlayersRef.current;
+
+  const currentPlayerIds = new Set();
+
+  for (const player of room.players || []) {
+    currentPlayerIds.add(player.id);
+
+    const existing =
+      visualPlayers.get(player.id);
+
+    if (!existing) {
+      visualPlayers.set(player.id, {
+        x: player.x,
+        y: player.y,
+        targetX: player.x,
+        targetY: player.y
+      });
+
+      continue;
+    }
+
+    existing.targetX = player.x;
+    existing.targetY = player.y;
+  }
+
+  /*
+    Remove jogadores que saíram da sala.
+  */
+  for (const playerId of visualPlayers.keys()) {
+    if (!currentPlayerIds.has(playerId)) {
+      visualPlayers.delete(playerId);
+    }
+  }
+}, [room]);
+
   /*
     DESENHO DO JOGO NO CANVAS
   */
  useEffect(() => {
   const canvas = canvasRef.current;
 
-  if (!canvas || !room?.map) {
+  if (!canvas) {
     return;
   }
 
@@ -174,81 +213,166 @@ const animationFrameRef = useRef(null);
     return;
   }
 
-  const visualPlayers = visualPlayersRef.current;
+  let previousTime = performance.now();
 
-  for (const player of room.players || []) {
-    const existing = visualPlayers.get(player.id);
+  function draw(currentTime) {
+    const currentRoom = roomRef.current;
 
-    if (!existing) {
-      visualPlayers.set(player.id, {
-        x: player.x,
-        y: player.y,
-        targetX: player.x,
-        targetY: player.y
-      });
-    } else {
-      existing.targetX = player.x;
-      existing.targetY = player.y;
+    if (!currentRoom?.map) {
+      animationFrameRef.current =
+        requestAnimationFrame(draw);
+
+      return;
     }
-  }
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    /*
+      Usa o tempo entre os frames para manter
+      a animação estável mesmo em telas diferentes.
+    */
+    const deltaTime = Math.min(
+      currentTime - previousTime,
+      50
+    );
 
+    previousTime = currentTime;
+
+    const interpolation =
+      1 - Math.pow(0.001, deltaTime / 1000);
+
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    /*
+      CHÃO
+    */
     ctx.fillStyle = "#2a2a2a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let y = 0; y < room.map.length; y += 1) {
-      for (let x = 0; x < room.map[y].length; x += 1) {
-        const tile = room.map[y][x];
+    ctx.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    /*
+      MAPA
+    */
+    for (
+      let y = 0;
+      y < currentRoom.map.length;
+      y += 1
+    ) {
+      for (
+        let x = 0;
+        x < currentRoom.map[y].length;
+        x += 1
+      ) {
+        const tile =
+          currentRoom.map[y][x];
+
         const px = x * TILE;
         const py = y * TILE;
 
         ctx.strokeStyle = "#333";
-        ctx.strokeRect(px, py, TILE, TILE);
+
+        ctx.strokeRect(
+          px,
+          py,
+          TILE,
+          TILE
+        );
 
         if (tile === "#") {
           ctx.fillStyle = "#666";
-          ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+
+          ctx.fillRect(
+            px + 2,
+            py + 2,
+            TILE - 4,
+            TILE - 4
+          );
 
           ctx.fillStyle = "#888";
-          ctx.fillRect(px + 8, py + 8, TILE - 16, 10);
+
+          ctx.fillRect(
+            px + 8,
+            py + 8,
+            TILE - 16,
+            10
+          );
         }
 
         if (tile === "x") {
           ctx.fillStyle = "#A86A2A";
-          ctx.fillRect(px + 6, py + 6, TILE - 12, TILE - 12);
+
+          ctx.fillRect(
+            px + 6,
+            py + 6,
+            TILE - 12,
+            TILE - 12
+          );
 
           ctx.strokeStyle = "#5a3311";
-          ctx.strokeRect(px + 6, py + 6, TILE - 12, TILE - 12);
+
+          ctx.strokeRect(
+            px + 6,
+            py + 6,
+            TILE - 12,
+            TILE - 12
+          );
         }
       }
     }
 
-    room.powerUps?.forEach(power => {
-      const cx = power.x * TILE + TILE / 2;
-      const cy = power.y * TILE + TILE / 2;
+    /*
+      POWER-UPS
+    */
+    const powerColors = {
+      range: "#ffcc00",
+      bomb: "#00d0ff",
+      speed: "#00ff88",
+      shield: "#ff55ff",
+      kick: "#ff8c00",
+      slowTrap: "#8b5cf6"
+    };
 
-      const powerColors = {
-        range: "#ffcc00",
-        speed: "#00ff88",
-        shield: "#ff55ff",
-        slowTrap: "#8b5cf6",
-        landMine: "#666666"
-      };
+    const powerIcons = {
+      range: "🔥",
+      bomb: "💣",
+      speed: "⚡",
+      shield: "🛡",
+      kick: "🥾",
+      slowTrap: "🧪"
+    };
 
-      const powerIcons = {
-        range: "🔥",
-        speed: "⚡",
-        shield: "🛡",
-        slowTrap: "🧪",
-        landMine: "💥"
-      };
+    for (
+      const power of
+      currentRoom.powerUps || []
+    ) {
+      const cx =
+        power.x * TILE + TILE / 2;
 
-      ctx.fillStyle = powerColors[power.type] || "#fff";
+      const cy =
+        power.y * TILE + TILE / 2;
+
+      ctx.fillStyle =
+        powerColors[power.type] ||
+        "#ffffff";
 
       ctx.beginPath();
-      ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+
+      ctx.arc(
+        cx,
+        cy,
+        12,
+        0,
+        Math.PI * 2
+      );
+
       ctx.fill();
 
       ctx.fillStyle = "#111";
@@ -261,59 +385,259 @@ const animationFrameRef = useRef(null);
         cx,
         cy + 1
       );
-    });
+    }
 
-    for (const player of room.players || []) {
-      const visual = visualPlayers.get(player.id);
+    /*
+      BOMBAS
+    */
+    for (
+      const bomb of
+      currentRoom.bombs || []
+    ) {
+      const cx =
+        bomb.x * TILE + TILE / 2;
 
-      if (!visual) continue;
+      const cy =
+        bomb.y * TILE + TILE / 2;
 
-      const interpolation = 0.22;
-
-      visual.x +=
-        (visual.targetX - visual.x) * interpolation;
-
-      visual.y +=
-        (visual.targetY - visual.y) * interpolation;
-
-      const cx = visual.x * TILE + TILE / 2;
-      const cy = visual.y * TILE + TILE / 2;
-
-      ctx.globalAlpha = player.alive ? 1 : 0.35;
-
-      ctx.fillStyle =
-        colors[player.number - 1] || "white";
+      ctx.fillStyle = "#111";
 
       ctx.beginPath();
-      ctx.arc(cx, cy, 17, 0, Math.PI * 2);
+
+      ctx.arc(
+        cx,
+        cy,
+        18,
+        0,
+        Math.PI * 2
+      );
+
       ctx.fill();
 
+      ctx.fillStyle = "#eee";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        cx - 5,
+        cy - 6,
+        4,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+      ctx.strokeStyle = "#ff8c00";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        cx + 7,
+        cy - 10
+      );
+
+      ctx.lineTo(
+        cx + 12,
+        cy - 18
+      );
+
+      ctx.stroke();
+
+      ctx.lineWidth = 1;
+    }
+
+    /*
+      EXPLOSÕES
+    */
+    for (
+      const explosion of
+      currentRoom.explosions || []
+    ) {
+      const px =
+        explosion.x * TILE;
+
+      const py =
+        explosion.y * TILE;
+
+      ctx.fillStyle = "#ffd400";
+
+      ctx.fillRect(
+        px + 3,
+        py + 3,
+        TILE - 6,
+        TILE - 6
+      );
+
+      ctx.fillStyle = "#ff6b00";
+
+      ctx.fillRect(
+        px + 12,
+        py + 12,
+        TILE - 24,
+        TILE - 24
+      );
+    }
+
+    /*
+      JOGADORES
+    */
+    const visualPlayers =
+      visualPlayersRef.current;
+
+    for (
+      const player of
+      currentRoom.players || []
+    ) {
+      let visual =
+        visualPlayers.get(player.id);
+
+      if (!visual) {
+        visual = {
+          x: player.x,
+          y: player.y,
+          targetX: player.x,
+          targetY: player.y
+        };
+
+        visualPlayers.set(
+          player.id,
+          visual
+        );
+      }
+
+      /*
+        Evita atravessar o mapa visualmente
+        em caso de reinício ou teletransporte.
+      */
+      const distanceToTarget =
+        Math.abs(
+          visual.targetX - visual.x
+        ) +
+        Math.abs(
+          visual.targetY - visual.y
+        );
+
+      if (distanceToTarget > 3) {
+        visual.x = visual.targetX;
+        visual.y = visual.targetY;
+      } else {
+        visual.x +=
+          (
+            visual.targetX -
+            visual.x
+          ) * interpolation;
+
+        visual.y +=
+          (
+            visual.targetY -
+            visual.y
+          ) * interpolation;
+      }
+
+      /*
+        Corrige valores muito próximos do alvo.
+      */
+      if (
+        Math.abs(
+          visual.targetX - visual.x
+        ) < 0.001
+      ) {
+        visual.x = visual.targetX;
+      }
+
+      if (
+        Math.abs(
+          visual.targetY - visual.y
+        ) < 0.001
+      ) {
+        visual.y = visual.targetY;
+      }
+
+      const cx =
+        visual.x * TILE + TILE / 2;
+
+      const cy =
+        visual.y * TILE + TILE / 2;
+
+      ctx.globalAlpha =
+        player.alive ? 1 : 0.35;
+
+      ctx.fillStyle =
+        colors[player.number - 1] ||
+        "white";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        cx,
+        cy,
+        17,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fill();
+
+      /*
+        ESCUDO
+      */
       if (player.shield) {
         ctx.strokeStyle = "#00ffff";
         ctx.lineWidth = 4;
 
         ctx.beginPath();
-        ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+
+        ctx.arc(
+          cx,
+          cy,
+          22,
+          0,
+          Math.PI * 2
+        );
+
         ctx.stroke();
 
         ctx.lineWidth = 1;
       }
 
+      /*
+        LENTIDÃO
+      */
       if (player.slowed) {
         ctx.strokeStyle = "#8b5cf6";
         ctx.lineWidth = 4;
 
         ctx.beginPath();
-        ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+
+        ctx.arc(
+          cx,
+          cy,
+          25,
+          0,
+          Math.PI * 2
+        );
+
         ctx.stroke();
 
         ctx.lineWidth = 1;
       }
 
+      /*
+        BOT
+      */
       if (player.isBot) {
         ctx.strokeStyle = "#111";
         ctx.lineWidth = 3;
-        ctx.strokeRect(cx - 14, cy - 14, 28, 28);
+
+        ctx.strokeRect(
+          cx - 14,
+          cy - 14,
+          28,
+          28
+        );
+
         ctx.lineWidth = 1;
       }
 
@@ -322,7 +646,11 @@ const animationFrameRef = useRef(null);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      ctx.fillText(player.number, cx, cy);
+      ctx.fillText(
+        player.number,
+        cx,
+        cy
+      );
 
       ctx.globalAlpha = 1;
     }
@@ -331,7 +659,8 @@ const animationFrameRef = useRef(null);
       requestAnimationFrame(draw);
   }
 
-  draw();
+  animationFrameRef.current =
+    requestAnimationFrame(draw);
 
   return () => {
     if (animationFrameRef.current) {
@@ -340,7 +669,7 @@ const animationFrameRef = useRef(null);
       );
     }
   };
-}, [room]);
+}, []);
 
   const humans =
     room.players?.filter(player => {
