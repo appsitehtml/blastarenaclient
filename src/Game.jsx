@@ -403,6 +403,67 @@ function drawNinjaSkin(
     isMoving
   );
 
+  // Espadas cruzadas nas costas
+ctx.save();
+
+ctx.strokeStyle = "#8d6e63";
+ctx.lineWidth = 4;
+ctx.lineCap = "round";
+
+ctx.beginPath();
+
+ctx.moveTo(
+  cx - 11,
+  shoulderY + 13
+);
+
+ctx.lineTo(
+  cx + 11,
+  shoulderY - 14
+);
+
+ctx.moveTo(
+  cx + 11,
+  shoulderY + 13
+);
+
+ctx.lineTo(
+  cx - 11,
+  shoulderY - 14
+);
+
+ctx.stroke();
+
+// Lâminas
+ctx.strokeStyle = "#cfd8dc";
+ctx.lineWidth = 3;
+
+ctx.beginPath();
+
+ctx.moveTo(
+  cx - 7,
+  shoulderY + 7
+);
+
+ctx.lineTo(
+  cx + 14,
+  shoulderY - 18
+);
+
+ctx.moveTo(
+  cx + 7,
+  shoulderY + 7
+);
+
+ctx.lineTo(
+  cx - 14,
+  shoulderY - 18
+);
+
+ctx.stroke();
+
+ctx.restore();
+
   ctx.strokeStyle = "#111";
   ctx.fillStyle = "#111";
   ctx.lineWidth = 5;
@@ -750,8 +811,8 @@ function drawImageEmoji(
     Como suas imagens são horizontais e possuem texto,
     elas não podem ser desenhadas em 76 x 76.
   */
-  const maxWidth = 145;
-  const maxHeight = 92;
+  const maxWidth = 110;
+  const maxHeight = 70;
 
   const scale = Math.min(
     maxWidth / image.naturalWidth,
@@ -770,9 +831,9 @@ function drawImageEmoji(
   ctx.save();
 
   // Sombra para destacar a imagem no mapa
-  ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
-  ctx.shadowBlur = 8;
-  ctx.shadowOffsetY = 3;
+ ctx.shadowColor = "transparent";
+ctx.shadowBlur = 0;
+ctx.shadowOffsetY = 0;
 
   ctx.drawImage(
     image,
@@ -783,6 +844,535 @@ function drawImageEmoji(
   );
 
   ctx.restore();
+}
+
+function drawSuperSaiyanSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    bob,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  const auraPulse =
+    0.55 +
+    Math.sin(currentTime / 90) * 0.15;
+
+  ctx.save();
+
+  // Aura
+  ctx.globalAlpha = auraPulse;
+  ctx.fillStyle = "#ffd600";
+
+  ctx.beginPath();
+  ctx.ellipse(
+    cx,
+    cy,
+    22,
+    31,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.globalAlpha = 1;
+
+  // Cabelo espetado
+  ctx.fillStyle = "#ffe600";
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 10, headY - 3);
+  ctx.lineTo(cx - 16, headY - 18);
+  ctx.lineTo(cx - 5, headY - 11);
+  ctx.lineTo(cx, headY - 25);
+  ctx.lineTo(cx + 5, headY - 11);
+  ctx.lineTo(cx + 16, headY - 18);
+  ctx.lineTo(cx + 10, headY - 3);
+
+  ctx.closePath();
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#f4b183";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY,
+    8,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Roupa laranja
+  ctx.strokeStyle = "#ff7a00";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Braços
+  ctx.beginPath();
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx - 12,
+    shoulderY + 7 + swing
+  );
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx + 12,
+    shoulderY + 7 - swing
+  );
+
+  ctx.stroke();
+
+  // Pernas azuis
+  ctx.strokeStyle = "#1e4fa3";
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx - 9,
+    hipY + 13 - swing
+  );
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx + 9,
+    hipY + 13 + swing
+  );
+
+  ctx.stroke();
+
+  // Raios da aura
+  ctx.strokeStyle = "#fff176";
+  ctx.lineWidth = 2;
+
+  for (let i = 0; i < 4; i += 1) {
+    const angle =
+      currentTime / 260 +
+      i * (Math.PI / 2);
+
+    const x1 =
+      cx + Math.cos(angle) * 24;
+
+    const y1 =
+      cy + Math.sin(angle) * 30;
+
+    const x2 =
+      cx + Math.cos(angle) * 30;
+
+    const y2 =
+      cy + Math.sin(angle) * 37;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawItadoriSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  // Cabelo rosa
+  ctx.fillStyle = "#f28cae";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY - 3,
+    9,
+    Math.PI,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#efb18b";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY,
+    8,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Uniforme escuro
+  ctx.strokeStyle = "#20212b";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Gola vermelha
+  ctx.strokeStyle = "#d9273f";
+  ctx.lineWidth = 4;
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 7, shoulderY - 2);
+  ctx.lineTo(cx + 7, shoulderY - 2);
+  ctx.stroke();
+
+  // Braços
+  ctx.strokeStyle = "#20212b";
+  ctx.lineWidth = 6;
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx - 12,
+    shoulderY + 7 + swing
+  );
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx + 12,
+    shoulderY + 7 - swing
+  );
+
+  ctx.stroke();
+
+  // Pernas
+  ctx.beginPath();
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx - 9,
+    hipY + 13 - swing
+  );
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx + 9,
+    hipY + 13 + swing
+  );
+
+  ctx.stroke();
+
+  // Energia amaldiçoada
+  ctx.strokeStyle = "#d84cff";
+  ctx.lineWidth = 2;
+  ctx.globalAlpha =
+    0.6 +
+    Math.sin(currentTime / 100) * 0.2;
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy,
+    22,
+    currentTime / 400,
+    currentTime / 400 + Math.PI * 1.4
+  );
+  ctx.stroke();
+
+  ctx.globalAlpha = 1;
+}
+
+function drawGojoSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  // Cabelo branco
+  ctx.fillStyle = "#ffffff";
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 10, headY - 2);
+  ctx.lineTo(cx - 13, headY - 13);
+  ctx.lineTo(cx - 5, headY - 8);
+  ctx.lineTo(cx, headY - 17);
+  ctx.lineTo(cx + 5, headY - 8);
+  ctx.lineTo(cx + 13, headY - 13);
+  ctx.lineTo(cx + 10, headY - 2);
+
+  ctx.closePath();
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#efb18b";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY,
+    8,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Venda preta
+  ctx.fillStyle = "#101010";
+  ctx.fillRect(
+    cx - 9,
+    headY - 3,
+    18,
+    6
+  );
+
+  // Roupa preta
+  ctx.strokeStyle = "#111827";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Braços
+  ctx.beginPath();
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx - 12,
+    shoulderY + 7 + swing
+  );
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx + 12,
+    shoulderY + 7 - swing
+  );
+
+  ctx.stroke();
+
+  // Pernas
+  ctx.beginPath();
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx - 9,
+    hipY + 13 - swing
+  );
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx + 9,
+    hipY + 13 + swing
+  );
+
+  ctx.stroke();
+
+  // Infinito
+  const pulse =
+    24 +
+    Math.sin(currentTime / 120) * 3;
+
+  ctx.strokeStyle =
+    "rgba(80, 180, 255, 0.65)";
+
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy,
+    pulse,
+    0,
+    Math.PI * 2
+  );
+  ctx.stroke();
+}
+
+function drawNarutoSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  // Cabelo loiro
+  ctx.fillStyle = "#ffd740";
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 10, headY - 1);
+  ctx.lineTo(cx - 15, headY - 12);
+  ctx.lineTo(cx - 6, headY - 8);
+  ctx.lineTo(cx, headY - 16);
+  ctx.lineTo(cx + 6, headY - 8);
+  ctx.lineTo(cx + 15, headY - 12);
+  ctx.lineTo(cx + 10, headY - 1);
+
+  ctx.closePath();
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#efb18b";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY,
+    8,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Faixa ninja
+  ctx.fillStyle = "#1d3557";
+  ctx.fillRect(
+    cx - 10,
+    headY - 5,
+    20,
+    5
+  );
+
+  ctx.fillStyle = "#b0bec5";
+  ctx.fillRect(
+    cx - 4,
+    headY - 5,
+    8,
+    5
+  );
+
+  // Roupa laranja
+  ctx.strokeStyle = "#ff7a00";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Braços
+  ctx.beginPath();
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx - 12,
+    shoulderY + 7 + swing
+  );
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx + 12,
+    shoulderY + 7 - swing
+  );
+
+  ctx.stroke();
+
+  // Pernas pretas
+  ctx.strokeStyle = "#202020";
+  ctx.lineWidth = 6;
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx - 9,
+    hipY + 13 - swing
+  );
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx + 9,
+    hipY + 13 + swing
+  );
+
+  ctx.stroke();
+
+  // Bigodes no rosto
+  ctx.strokeStyle = "#5d4037";
+  ctx.lineWidth = 1;
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 7, headY + 2);
+  ctx.lineTo(cx - 11, headY + 1);
+
+  ctx.moveTo(cx - 7, headY + 5);
+  ctx.lineTo(cx - 11, headY + 5);
+
+  ctx.moveTo(cx + 7, headY + 2);
+  ctx.lineTo(cx + 11, headY + 1);
+
+  ctx.moveTo(cx + 7, headY + 5);
+  ctx.lineTo(cx + 11, headY + 5);
+
+  ctx.stroke();
 }
 
 function drawStickman(
@@ -802,44 +1392,78 @@ function drawStickman(
     player.skin || "stickman";
 
   if (skin === "ninja") {
-    drawNinjaSkin(
-      ctx,
-      player,
-      cx,
-      cy,
-      currentTime,
-      isMoving
-    );
-  } else if (
-    skin === "iceMonster"
-  ) {
-    drawIceMonsterSkin(
-      ctx,
-      player,
-      cx,
-      cy,
-      currentTime,
-      isMoving
-    );
-  } else if (skin === "bear") {
-    drawBearSkin(
-      ctx,
-      player,
-      cx,
-      cy,
-      currentTime,
-      isMoving
-    );
-  } else {
-    drawClassicSkin(
-      ctx,
-      player,
-      cx,
-      cy,
-      currentTime,
-      isMoving
-    );
-  }
+  drawNinjaSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "iceMonster") {
+  drawIceMonsterSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "bear") {
+  drawBearSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "superSaiyan") {
+  drawSuperSaiyanSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "itadori") {
+  drawItadoriSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "gojo") {
+  drawGojoSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "naruto") {
+  drawNarutoSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else {
+  drawClassicSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+}
 
   drawPlayerEffects(
   ctx,
@@ -1211,11 +1835,36 @@ function drawBlindnessOverlay(ctx, room, visualPlayers, canvas, socketId) {
   ctx.restore();
 }
 
+function createMapCache(room, width, height) {
+  const mapCanvas =
+    document.createElement("canvas");
+
+  mapCanvas.width = width;
+  mapCanvas.height = height;
+
+  const mapCtx =
+    mapCanvas.getContext("2d");
+
+  if (!mapCtx) {
+    return null;
+  }
+
+  drawMap(
+    mapCtx,
+    room,
+    mapCanvas
+  );
+
+  return mapCanvas;
+}
+
 function Game({ socket, room, myPlayer }) {
   const canvasRef = useRef(null);
   const visualPlayersRef = useRef(new Map());
   const animationFrameRef = useRef(null);
   const roomRef = useRef(room);
+  const mapCanvasRef = useRef(null);
+const mapCacheKeyRef = useRef("");
 
   const [selectedItem, setSelectedItem] = useState("bomb");
   const [trapMessage, setTrapMessage] = useState("");
@@ -1411,6 +2060,26 @@ function Game({ socket, room, myPlayer }) {
   useEffect(() => {
     roomRef.current = room;
 
+    const mapCacheKey = JSON.stringify({
+  theme: room.mapTheme,
+  map: room.map
+});
+
+if (
+  mapCacheKeyRef.current !==
+  mapCacheKey
+) {
+  mapCacheKeyRef.current =
+    mapCacheKey;
+
+  mapCanvasRef.current =
+    createMapCache(
+      room,
+      13 * TILE,
+      11 * TILE
+    );
+}
+
     const visualPlayers = visualPlayersRef.current;
     const currentPlayerIds = new Set();
 
@@ -1456,8 +2125,23 @@ function Game({ socket, room, myPlayer }) {
 
     let previousTime = performance.now();
 
+    let lastRenderTime = 0;
+const FRAME_INTERVAL = 1000 / 45;
+
     function draw(currentTime) {
       const currentRoom = roomRef.current;
+
+      if (
+  currentTime - lastRenderTime <
+  FRAME_INTERVAL
+) {
+  animationFrameRef.current =
+    requestAnimationFrame(draw);
+
+  return;
+}
+
+lastRenderTime = currentTime;
 
       if (!currentRoom?.map) {
         animationFrameRef.current = requestAnimationFrame(draw);
@@ -1472,7 +2156,19 @@ function Game({ socket, room, myPlayer }) {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      drawMap(ctx, currentRoom, canvas);
+      if (mapCanvasRef.current) {
+  ctx.drawImage(
+    mapCanvasRef.current,
+    0,
+    0
+  );
+} else {
+  drawMap(
+    ctx,
+    currentRoom,
+    canvas
+  );
+}
       drawPowerUps(ctx, currentRoom);
       drawExplosions(ctx, currentRoom);
       drawPlayers(

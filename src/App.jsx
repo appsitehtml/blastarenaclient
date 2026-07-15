@@ -180,6 +180,22 @@ function App() {
                 <option value="bear">
                   🐻 Urso
                 </option>
+
+                <option value="superSaiyan">
+  ⚡ Super Saiyajin
+</option>
+
+<option value="itadori">
+  👊 Itadori
+</option>
+
+<option value="gojo">
+  👁️ Satoru Gojo
+</option>
+
+<option value="naruto">
+  🍥 Naruto
+</option>
               </select>
             </div>
 
