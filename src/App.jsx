@@ -10,6 +10,7 @@ function App() {
   const [inputCode, setInputCode] = useState("");
   const [room, setRoom] = useState(null);
   const [message, setMessage] = useState("");
+  const [playerName, setPlayerName] = useState("");
 
   const [mapTheme, setMapTheme] =
   useState("random");
@@ -45,20 +46,43 @@ function App() {
   }, []);
 
   function createRoom(mode) {
+  const name = playerName.trim();
+
+  if (!name) {
+    setMessage("Digite seu nome.");
+    return;
+  }
+
   setMessage("");
 
   socket.emit("createRoom", {
     mode,
-    mapTheme
+    mapTheme,
+    playerName: name
   });
 }
 
   function joinRoom() {
-    const code = inputCode.trim().toUpperCase();
-    if (!code) return setMessage("Digite o código da sala.");
-    setMessage("");
-    socket.emit("joinRoom", code);
+  const code = inputCode.trim().toUpperCase();
+  const name = playerName.trim();
+
+  if (!name) {
+    setMessage("Digite seu nome.");
+    return;
   }
+
+  if (!code) {
+    setMessage("Digite o código da sala.");
+    return;
+  }
+
+  setMessage("");
+
+  socket.emit("joinRoom", {
+    code,
+    playerName: name
+  });
+}
 
   function startGame() {
     socket.emit("startGame");
@@ -108,6 +132,19 @@ function App() {
     </option>
   </select>
 </div>
+
+<div className="nameBox">
+  <input
+    type="text"
+    value={playerName}
+    onChange={event => {
+      setPlayerName(event.target.value);
+    }}
+    placeholder="Seu nome"
+    maxLength={15}
+  />
+</div>
+
             <button onClick={() => createRoom("1v1")}>Criar sala 1x1</button>
             <button className="secondaryButton" onClick={() => createRoom("duoBots")}>Criar sala 2 jogadores vs 2 bots</button>
 

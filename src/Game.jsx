@@ -671,11 +671,17 @@ const currentTheme =
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      ctx.fillText(
-        player.number,
-        cx,
-        cy
-      );
+      const playerInitial =
+  String(player.name || player.number)
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+ctx.fillText(
+  playerInitial,
+  cx,
+  cy
+);
 
       if (player.emoji) {
   ctx.save();
@@ -786,20 +792,45 @@ for (const bomb of currentRoom.bombs || []) {
     setChatText("");
   }
 
+  const humanPlayers =
+  room.players?.filter(
+    player => !player.isBot
+  ) || [];
+
+const playerOne =
+  humanPlayers.find(
+    player => player.number === 1
+  );
+
+const playerTwo =
+  humanPlayers.find(
+    player => player.number === 2
+  );
+
+const playerOneName =
+  playerOne?.name || "Jogador 1";
+
+const playerTwoName =
+  playerTwo?.name || "Jogador 2";
+
   return (
     <main className="gamePage">
       <div className="gameTop">
         <span>
-  Placar:{" "}
+  {playerOneName}{" "}
   {room.score?.player1 || 0}
   {" x "}
   {room.score?.player2 || 0}
+  {" "}
+  {playerTwoName}
 </span>
 
 {room.winStreak?.count > 1 && (
   <span>
-    🔥 Jogador{" "}
-    {room.winStreak.playerNumber}
+    🔥{" "}
+    {room.winStreak.playerNumber === 1
+      ? playerOneName
+      : playerTwoName}
     :{" "}
     {room.winStreak.count}
     {" vitórias seguidas"}
