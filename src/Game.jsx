@@ -1098,24 +1098,43 @@ function drawItadoriSkin(
 
   ctx.stroke();
 
-  // Energia amaldiçoada
-  ctx.strokeStyle = "#d84cff";
-  ctx.lineWidth = 2;
-  ctx.globalAlpha =
-    0.6 +
-    Math.sin(currentTime / 100) * 0.2;
+  // Partículas de energia amaldiçoada
+ctx.save();
+
+ctx.fillStyle = "rgba(210, 70, 255, 0.85)";
+
+for (let i = 0; i < 6; i += 1) {
+  const phase =
+    currentTime / 180 + i * 1.7;
+
+  const particleX =
+    cx +
+    Math.sin(phase) *
+      (10 + (i % 3) * 4);
+
+  const particleY =
+    cy +
+    18 -
+    ((currentTime / 18 + i * 9) % 42);
+
+  const size =
+    1.5 +
+    (i % 2) * 0.8;
 
   ctx.beginPath();
-  ctx.arc(
-    cx,
-    cy,
-    22,
-    currentTime / 400,
-    currentTime / 400 + Math.PI * 1.4
-  );
-  ctx.stroke();
 
-  ctx.globalAlpha = 1;
+  ctx.arc(
+    particleX,
+    particleY,
+    size,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+}
+
+ctx.restore();
 }
 
 function drawGojoSkin(
@@ -1220,25 +1239,48 @@ function drawGojoSkin(
 
   ctx.stroke();
 
-  // Infinito
-  const pulse =
-    24 +
-    Math.sin(currentTime / 120) * 3;
+  // Partículas azuis do infinito
+ctx.save();
 
-  ctx.strokeStyle =
-    "rgba(80, 180, 255, 0.65)";
+ctx.fillStyle = "rgba(90, 190, 255, 0.85)";
 
-  ctx.lineWidth = 2;
+for (let i = 0; i < 5; i += 1) {
+  const angle =
+    currentTime / 420 +
+    i * (Math.PI * 2 / 5);
+
+  const radius =
+    18 +
+    Math.sin(
+      currentTime / 140 + i
+    ) * 3;
+
+  const particleX =
+    cx + Math.cos(angle) * radius;
+
+  const particleY =
+    cy + Math.sin(angle) * radius;
+
+  const size =
+    1.8 +
+    Math.sin(
+      currentTime / 110 + i
+    ) * 0.7;
 
   ctx.beginPath();
+
   ctx.arc(
-    cx,
-    cy,
-    pulse,
+    particleX,
+    particleY,
+    Math.max(1, size),
     0,
     Math.PI * 2
   );
-  ctx.stroke();
+
+  ctx.fill();
+}
+
+ctx.restore();
 }
 
 function drawNarutoSkin(
