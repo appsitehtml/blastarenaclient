@@ -252,3 +252,31 @@ canvas {
   border-radius: 8px;
   font-size: 15px;
 }
+
+.roomCodeBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 2px dashed #ffae00;
+  border-radius: 12px;
+  background: rgba(255, 174, 0, 0.08);
+}
+
+.roomCodeBox span {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.roomCodeBox strong {
+  font-size: 34px;
+  letter-spacing: 8px;
+  color: #ffae00;
+}
+
+.roomCodeBox button {
+  width: auto;
+  padding: 9px 18px;
+}

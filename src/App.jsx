@@ -231,58 +231,89 @@ function App() {
           </>
         )}
 
-        {roomCode && room && (
-          <div className="roomBox">
-            <p>
-              Mapa:{" "}
-              {room.mapTheme === "forest"
-                ? "🌲 Floresta"
-                : room.mapTheme === "ice"
-                  ? "❄️ Gelo"
-                  : "🏭 Clássico"}
-            </p>
+        {roomCode && (
+  <div className="roomBox">
+    <h2>Sala {roomCode}</h2>
 
-            <h2>Sala {roomCode}</h2>
+    <div className="roomCodeBox">
+      <span>Código da sala</span>
 
-            <p>
-              Modo:{" "}
-              {room.mode === "duoBots"
-                ? "2 jogadores vs 2 bots"
-                : "1x1"}
-            </p>
+      <strong>{roomCode}</strong>
 
-            <p>
-              Jogadores:{" "}
-              {
-                room.players.filter(
-                  player => !player.isBot
-                ).length
-              }
-              /2
-            </p>
+      <button
+        type="button"
+        onClick={() => {
+          navigator.clipboard
+            .writeText(roomCode)
+            .then(() => {
+              setMessage(
+                "Código copiado com sucesso."
+              );
+            })
+            .catch(() => {
+              setMessage(
+                `Código da sala: ${roomCode}`
+              );
+            });
+        }}
+      >
+        Copiar código
+      </button>
+    </div>
 
-            <div className="playersList">
-              {room.players.map(player => (
-                <div key={player.id}>
-                  {player.name}
-                </div>
-              ))}
-            </div>
+    {!room ? (
+      <p>Carregando dados da sala...</p>
+    ) : (
+      <>
+        <p>
+          Mapa:{" "}
+          {room.mapTheme === "forest"
+            ? "🌲 Floresta"
+            : room.mapTheme === "ice"
+              ? "❄️ Gelo"
+              : "🏭 Clássico"}
+        </p>
 
-            {room.players.filter(
+        <p>
+          Modo:{" "}
+          {room.mode === "duoBots"
+            ? "2 jogadores vs 2 bots"
+            : "1x1"}
+        </p>
+
+        <p>
+          Jogadores:{" "}
+          {
+            room.players.filter(
               player => !player.isBot
-            ).length < 2 ? (
-              <p>
-                Envie o código para seu amigo
-                entrar.
-              </p>
-            ) : (
-              <button onClick={startGame}>
-                Iniciar jogo
-              </button>
-            )}
-          </div>
+            ).length
+          }
+          /2
+        </p>
+
+        <div className="playersList">
+          {room.players.map(player => (
+            <div key={player.id}>
+              {player.name}
+            </div>
+          ))}
+        </div>
+
+        {room.players.filter(
+          player => !player.isBot
+        ).length < 2 ? (
+          <p>
+            Envie o código para seu amigo entrar.
+          </p>
+        ) : (
+          <button onClick={startGame}>
+            Iniciar jogo
+          </button>
         )}
+      </>
+    )}
+  </div>
+)}
 
         {message && (
           <p className="message">
