@@ -15,7 +15,8 @@ const POWER_COLORS = {
   speed: "#00ff88",
   shield: "#ff55ff",
   kick: "#ff8c00",
-  slowTrap: "#8b5cf6"
+  slowTrap: "#8b5cf6",
+  visionTrap: "#111111"
 };
 
 const POWER_ICONS = {
@@ -24,7 +25,8 @@ const POWER_ICONS = {
   speed: "⚡",
   shield: "🛡",
   kick: "🥾",
-  slowTrap: "🧪"
+  slowTrap: "🧪",
+  visionTrap: "👁"
 };
 
 function drawClassicWall(ctx, px, py) {
@@ -316,6 +318,31 @@ function drawStickman(ctx, player, cx, cy, currentTime, isMoving) {
     ctx.stroke();
   }
 
+  if (player.frozen) {
+    ctx.strokeStyle = "#d9f7ff";
+    ctx.fillStyle = "rgba(120, 210, 255, 0.28)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(cx - 17, cy - 27, 34, 52, 8);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "14px Arial";
+    ctx.fillText("❄", cx, cy - 30);
+  }
+
+  if (player.rooted) {
+    ctx.strokeStyle = "#42a846";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx - 13, cy + 20);
+    ctx.quadraticCurveTo(cx - 20, cy + 8, cx - 8, cy + 2);
+    ctx.moveTo(cx + 13, cy + 20);
+    ctx.quadraticCurveTo(cx + 20, cy + 8, cx + 8, cy + 2);
+    ctx.stroke();
+  }
+
   if (player.isBot) {
     ctx.strokeStyle = "#111";
     ctx.lineWidth = 2;
@@ -386,6 +413,41 @@ function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
   }
 }
 
+
+function drawBlindnessOverlay(ctx, room, visualPlayers, canvas, socketId) {
+  const localPlayer = (room.players || []).find(
+    player => player.id === socketId
+  );
+
+  if (!localPlayer?.blinded) {
+    return;
+  }
+
+  const visual = visualPlayers.get(localPlayer.id);
+
+  if (!visual) {
+    return;
+  }
+
+  const cx = visual.x * TILE + TILE / 2;
+  const cy = visual.y * TILE + TILE / 2;
+  const radius = 82;
+
+  ctx.save();
+  ctx.fillStyle = "rgba(0, 0, 0, 0.97)";
+  ctx.beginPath();
+  ctx.rect(0, 0, canvas.width, canvas.height);
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2, true);
+  ctx.fill("evenodd");
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function Game({ socket, room, myPlayer }) {
   const canvasRef = useRef(null);
   const visualPlayersRef = useRef(new Map());
@@ -446,6 +508,11 @@ function Game({ socket, room, myPlayer }) {
         return;
       }
 
+      if (event.key === "3") {
+        setSelectedItem("visionTrap");
+        return;
+      }
+
       if (event.code === "Space") {
         event.preventDefault();
 
@@ -466,6 +533,21 @@ function Game({ socket, room, myPlayer }) {
           }
 
           socket.emit("placeHiddenTrap", "slowTrap");
+          return;
+        }
+
+        if (selectedItem === "visionTrap") {
+          if ((myPlayer?.visionTrapCount || 0) <= 0) {
+            setTrapMessage("Você não possui armadilhas de visão.");
+
+            window.setTimeout(() => {
+              setTrapMessage("");
+            }, 2500);
+
+            return;
+          }
+
+          socket.emit("placeHiddenTrap", "visionTrap");
         }
 
         return;
@@ -503,7 +585,8 @@ function Game({ socket, room, myPlayer }) {
     socket,
     selectedItem,
     emojiMenuOpen,
-    myPlayer?.slowTrapCount
+    myPlayer?.slowTrapCount,
+    myPlayer?.visionTrapCount
   ]);
 
   useEffect(() => {
@@ -602,6 +685,13 @@ function Game({ socket, room, myPlayer }) {
         interpolation
       );
       drawBombs(ctx, currentRoom);
+      drawBlindnessOverlay(
+        ctx,
+        currentRoom,
+        visualPlayersRef.current,
+        canvas,
+        socket.id
+      );
 
       animationFrameRef.current = requestAnimationFrame(draw);
     }
@@ -709,8 +799,27 @@ function Game({ socket, room, myPlayer }) {
             setSelectedItem("slowTrap");
           }}
         >
-          2 — 🧪 Lentidão:{" "}
-          {myPlayer?.slowTrapCount || 0}
+          2 —{" "}
+          {room.mapTheme === "ice"
+            ? "❄ Congelante"
+            : room.mapTheme === "forest"
+              ? "🌿 Vinhas"
+              : "🧪 Lentidão"}
+          : {myPlayer?.slowTrapCount || 0}
+        </button>
+
+        <button
+          type="button"
+          className={
+            selectedItem === "visionTrap"
+              ? "selectedPower"
+              : ""
+          }
+          onClick={() => {
+            setSelectedItem("visionTrap");
+          }}
+        >
+          3 — 👁 Visão: {myPlayer?.visionTrapCount || 0}
         </button>
       </div>
 
