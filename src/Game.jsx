@@ -686,6 +686,105 @@ function drawBearSkin(
   ctx.stroke();
 }
 
+function drawPlayerName(ctx, player, cx, cy) {
+  const name = String(
+    player.name || `Jogador ${player.number}`
+  )
+    .trim()
+    .slice(0, 15);
+
+  ctx.save();
+
+  ctx.font = "bold 11px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const textWidth = ctx.measureText(name).width;
+  const boxWidth = textWidth + 12;
+  const boxHeight = 18;
+  const boxX = cx - boxWidth / 2;
+  const boxY = cy - 43;
+
+  // Fundo semitransparente
+  ctx.fillStyle = "rgba(0, 0, 0, 0.48)";
+  ctx.beginPath();
+  ctx.roundRect(
+    boxX,
+    boxY,
+    boxWidth,
+    boxHeight,
+    7
+  );
+  ctx.fill();
+
+  // Nome semitransparente
+  ctx.globalAlpha = 0.82;
+  ctx.fillStyle = "#ffffff";
+
+  ctx.fillText(
+    name,
+    cx,
+    boxY + boxHeight / 2 + 1
+  );
+
+  ctx.restore();
+}
+
+function drawImageEmoji(
+  ctx,
+  image,
+  cx,
+  cy
+) {
+  if (
+    !image ||
+    !image.complete ||
+    image.naturalWidth === 0 ||
+    image.naturalHeight === 0
+  ) {
+    return;
+  }
+
+  /*
+    Mantém a proporção original.
+    Como suas imagens são horizontais e possuem texto,
+    elas não podem ser desenhadas em 76 x 76.
+  */
+  const maxWidth = 145;
+  const maxHeight = 92;
+
+  const scale = Math.min(
+    maxWidth / image.naturalWidth,
+    maxHeight / image.naturalHeight
+  );
+
+  const width =
+    image.naturalWidth * scale;
+
+  const height =
+    image.naturalHeight * scale;
+
+  const x = cx - width / 2;
+  const y = cy - height - 55;
+
+  ctx.save();
+
+  // Sombra para destacar a imagem no mapa
+  ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+
+  ctx.drawImage(
+    image,
+    x,
+    y,
+    width,
+    height
+  );
+
+  ctx.restore();
+}
+
 function drawStickman(
   ctx,
   player,
@@ -742,66 +841,52 @@ function drawStickman(
     );
   }
 
-  const initial =
-    String(
-      player.name ||
-      player.number
-    )
-      .trim()
-      .charAt(0)
-      .toUpperCase();
-
-  ctx.fillStyle = "#ffffff";
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 3;
-  ctx.font = "bold 11px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.strokeText(
-    initial,
-    cx,
-    cy + 2
-  );
-
-  ctx.fillText(
-    initial,
-    cx,
-    cy + 2
-  );
-
   drawPlayerEffects(
-    ctx,
-    player,
-    cx,
-    cy
-  );
+  ctx,
+  player,
+  cx,
+  cy
+);
 
-  if (player.emoji) {
+/*
+  Nome acima da cabeça.
+  Quando existir uma imagem grande de emoji,
+  o nome continua visível abaixo dela.
+*/
+drawPlayerName(
+  ctx,
+  player,
+  cx,
+  cy
+);
 
-  if (emojiImages[player.emoji]) {
+if (player.emoji) {
+  const imageEmoji =
+    emojiImages[player.emoji];
 
-    ctx.drawImage(
-      emojiImages[player.emoji],
-      cx - 38,
-      cy - 105,
-      76,
-      76
+  if (imageEmoji) {
+    drawImageEmoji(
+      ctx,
+      imageEmoji,
+      cx,
+      cy
     );
-
   } else {
+    ctx.save();
 
+    ctx.globalAlpha = 1;
     ctx.font = "28px Arial";
     ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
     ctx.fillText(
       player.emoji,
       cx,
-      cy - 43
+      cy - 62
     );
 
+    ctx.restore();
   }
-
 }
 
   ctx.restore();
