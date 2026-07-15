@@ -18,6 +18,8 @@ const roomRef = useRef(room);
   const [selectedItem, setSelectedItem] = useState("bomb");
   const [trapMessage, setTrapMessage] = useState("");
   const [chatText, setChatText] = useState("");
+  const [emojiMenuOpen, setEmojiMenuOpen] =
+  useState(false);
 
   /*
     CONTROLES DO TECLADO
@@ -41,6 +43,46 @@ const roomRef = useRef(room);
       ) {
         return;
       }
+
+      if (
+  event.key === "f" ||
+  event.key === "F"
+) {
+  event.preventDefault();
+
+  setEmojiMenuOpen(
+    current => !current
+  );
+
+  return;
+}
+
+if (emojiMenuOpen) {
+  const emojiByKey = {
+    "1": "😂",
+    "2": "😡",
+    "3": "😭",
+    "4": "🔥",
+    "5": "👍",
+    "6": "👎",
+    "7": "💣",
+    "8": "😱"
+  };
+
+  const selectedEmoji =
+    emojiByKey[event.key];
+
+  if (selectedEmoji) {
+    socket.emit(
+      "sendEmoji",
+      selectedEmoji
+    );
+
+    setEmojiMenuOpen(false);
+  }
+
+  return;
+}
 
       if (event.key === "1") {
         setSelectedItem("bomb");
@@ -124,6 +166,7 @@ const roomRef = useRef(room);
   }, [
   socket,
   selectedItem,
+  emojiMenuOpen,
   myPlayer?.slowTrapCount
 ]);
 
@@ -246,10 +289,48 @@ const roomRef = useRef(room);
       canvas.height
     );
 
+    const theme =
+  currentRoom.mapTheme ||
+  "classic";
+
+const themeColors = {
+  classic: {
+    floor: "#2a2a2a",
+    grid: "#333333",
+    wall: "#666666",
+    wallDetail: "#888888",
+    box: "#A86A2A",
+    boxBorder: "#5a3311"
+  },
+
+  forest: {
+    floor: "#315c2b",
+    grid: "#264b22",
+    wall: "#65743a",
+    wallDetail: "#879653",
+    box: "#7a4a25",
+    boxBorder: "#422810"
+  },
+
+  ice: {
+    floor: "#8ed4ea",
+    grid: "#72bed8",
+    wall: "#d3f3ff",
+    wallDetail: "#ffffff",
+    box: "#73aeca",
+    boxBorder: "#3b7896"
+  }
+};
+
+const currentTheme =
+  themeColors[theme] ||
+  themeColors.classic;
+
     /*
       CHÃO
     */
-    ctx.fillStyle = "#2a2a2a";
+    ctx.fillStyle =
+  currentTheme.floor;
 
     ctx.fillRect(
       0,
@@ -277,7 +358,8 @@ const roomRef = useRef(room);
         const px = x * TILE;
         const py = y * TILE;
 
-        ctx.strokeStyle = "#333";
+        ctx.strokeStyle =
+  currentTheme.grid;
 
         ctx.strokeRect(
           px,
@@ -287,7 +369,8 @@ const roomRef = useRef(room);
         );
 
         if (tile === "#") {
-          ctx.fillStyle = "#666";
+          ctx.fillStyle =
+  currentTheme.wall;
 
           ctx.fillRect(
             px + 2,
@@ -296,7 +379,8 @@ const roomRef = useRef(room);
             TILE - 4
           );
 
-          ctx.fillStyle = "#888";
+          ctx.fillStyle =
+  currentTheme.wallDetail;
 
           ctx.fillRect(
             px + 8,
@@ -307,7 +391,8 @@ const roomRef = useRef(room);
         }
 
         if (tile === "x") {
-          ctx.fillStyle = "#A86A2A";
+          ctx.fillStyle =
+  currentTheme.box;
 
           ctx.fillRect(
             px + 6,
@@ -316,7 +401,8 @@ const roomRef = useRef(room);
             TILE - 12
           );
 
-          ctx.strokeStyle = "#5a3311";
+          ctx.strokeStyle =
+  currentTheme.boxBorder;
 
           ctx.strokeRect(
             px + 6,
@@ -591,6 +677,23 @@ const roomRef = useRef(room);
         cy
       );
 
+      if (player.emoji) {
+  ctx.save();
+
+  ctx.globalAlpha = 1;
+  ctx.font = "28px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.fillText(
+    player.emoji,
+    cx,
+    cy - 38
+  );
+
+  ctx.restore();
+}
+
       ctx.globalAlpha = 1;
     }
 
@@ -686,6 +789,22 @@ for (const bomb of currentRoom.bombs || []) {
   return (
     <main className="gamePage">
       <div className="gameTop">
+        <span>
+  Placar:{" "}
+  {room.score?.player1 || 0}
+  {" x "}
+  {room.score?.player2 || 0}
+</span>
+
+{room.winStreak?.count > 1 && (
+  <span>
+    🔥 Jogador{" "}
+    {room.winStreak.playerNumber}
+    :{" "}
+    {room.winStreak.count}
+    {" vitórias seguidas"}
+  </span>
+)}
         <strong>
           Sala {room.code}
         </strong>
@@ -740,6 +859,19 @@ for (const bomb of currentRoom.bombs || []) {
         </button>
 
       </div>
+
+      {emojiMenuOpen && (
+  <div className="emojiMenu">
+    <div>1 — 😂</div>
+    <div>2 — 😡</div>
+    <div>3 — 😭</div>
+    <div>4 — 🔥</div>
+    <div>5 — 👍</div>
+    <div>6 — 👎</div>
+    <div>7 — 💣</div>
+    <div>8 — 😱</div>
+  </div>
+)}
 
       {trapMessage && (
         <div className="trapMessage">

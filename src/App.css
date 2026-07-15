@@ -188,3 +188,38 @@ canvas {
   font-weight: bold;
   z-index: 100;
 }
+
+.mapSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.mapSelector select {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.emojiMenu {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(10, 10, 15, 0.94);
+  color: white;
+  font-size: 18px;
+  z-index: 100;
+}
+
+.emojiMenu div {
+  padding: 8px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.1);
+}

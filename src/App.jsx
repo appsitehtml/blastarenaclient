@@ -11,6 +11,9 @@ function App() {
   const [room, setRoom] = useState(null);
   const [message, setMessage] = useState("");
 
+  const [mapTheme, setMapTheme] =
+  useState("random");
+
   const myPlayer = useMemo(() => {
     return room?.players?.find(player => player.id === socket.id) || null;
   }, [room]);
@@ -42,9 +45,13 @@ function App() {
   }, []);
 
   function createRoom(mode) {
-    setMessage("");
-    socket.emit("createRoom", mode);
-  }
+  setMessage("");
+
+  socket.emit("createRoom", {
+    mode,
+    mapTheme
+  });
+}
 
   function joinRoom() {
     const code = inputCode.trim().toUpperCase();
@@ -69,6 +76,38 @@ function App() {
 
         {!roomCode && (
           <>
+
+          <div className="mapSelector">
+  <label htmlFor="mapTheme">
+    Mapa
+  </label>
+
+  <select
+    id="mapTheme"
+    value={mapTheme}
+    onChange={event => {
+      setMapTheme(
+        event.target.value
+      );
+    }}
+  >
+    <option value="random">
+      🎲 Aleatório
+    </option>
+
+    <option value="classic">
+      🏭 Clássico
+    </option>
+
+    <option value="forest">
+      🌲 Floresta
+    </option>
+
+    <option value="ice">
+      ❄️ Gelo
+    </option>
+  </select>
+</div>
             <button onClick={() => createRoom("1v1")}>Criar sala 1x1</button>
             <button className="secondaryButton" onClick={() => createRoom("duoBots")}>Criar sala 2 jogadores vs 2 bots</button>
 
@@ -86,6 +125,14 @@ function App() {
 
         {roomCode && room && (
           <div className="roomBox">
+            <p>
+  Mapa:{" "}
+  {room.mapTheme === "forest"
+    ? "🌲 Floresta"
+    : room.mapTheme === "ice"
+      ? "❄️ Gelo"
+      : "🏭 Clássico"}
+</p>
             <h2>Sala {roomCode}</h2>
             <p>Modo: {room.mode === "duoBots" ? "2 jogadores vs 2 bots" : "1x1"}</p>
             <p>Jogadores: {room.players.filter(p => !p.isBot).length}/2</p>
