@@ -19,11 +19,6 @@ const POWER_COLORS = {
   visionTrap: "#111111"
 };
 
-const [
-  opponentEffectMessage,
-  setOpponentEffectMessage
-] = useState("");
-
 const POWER_ICONS = {
   range: "🔥",
   bomb: "💣",
@@ -289,31 +284,103 @@ function getWalkPose(
   };
 }
 
-function getWalkPose(
+function drawClassicSkin(
+  ctx,
+  player,
   cx,
   cy,
   currentTime,
   isMoving
 ) {
-  const phase = currentTime / 85;
+  const color =
+    PLAYER_COLORS[player.number - 1] ||
+    "#ffffff";
 
-  const swing =
-    isMoving
-      ? Math.sin(phase) * 6
-      : 0;
-
-  const bob =
-    isMoving
-      ? Math.abs(Math.sin(phase)) * 1.5
-      : 0;
-
-  return {
+  const {
     swing,
-    bob,
-    headY: cy - 12 - bob,
-    shoulderY: cy - 2 - bob,
-    hipY: cy + 9 - bob
-  };
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+
+  // Cabeça
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY,
+    7,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Corpo
+  ctx.beginPath();
+  ctx.moveTo(
+    cx,
+    headY + 7
+  );
+  ctx.lineTo(
+    cx,
+    hipY
+  );
+  ctx.stroke();
+
+  // Braço esquerdo
+  ctx.beginPath();
+  ctx.moveTo(
+    cx,
+    shoulderY
+  );
+  ctx.lineTo(
+    cx - 11,
+    shoulderY + 7 + swing
+  );
+
+  // Braço direito
+  ctx.moveTo(
+    cx,
+    shoulderY
+  );
+  ctx.lineTo(
+    cx + 11,
+    shoulderY + 7 - swing
+  );
+
+  ctx.stroke();
+
+  // Perna esquerda
+  ctx.beginPath();
+  ctx.moveTo(
+    cx,
+    hipY
+  );
+  ctx.lineTo(
+    cx - 9,
+    hipY + 12 - swing
+  );
+
+  // Perna direita
+  ctx.moveTo(
+    cx,
+    hipY
+  );
+  ctx.lineTo(
+    cx + 9,
+    hipY + 12 + swing
+  );
+
+  ctx.stroke();
 }
 
 function drawNinjaSkin(
@@ -1069,6 +1136,11 @@ function Game({ socket, room, myPlayer }) {
   const [trapMessage, setTrapMessage] = useState("");
   const [chatText, setChatText] = useState("");
   const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
+
+  const [
+  opponentEffectMessage,
+  setOpponentEffectMessage
+] = useState("");
 
   useEffect(() => {
     function handleKeyDown(event) {
