@@ -34,6 +34,17 @@ const POWER_ICONS = {
   visionTrap: "👁"
 };
 
+const emojiImages = {};
+
+const shiuImage = new Image();
+shiuImage.src = "/emojis/shiu.png";
+
+const drinkingImage = new Image();
+drinkingImage.src = "/emojis/drinking.png";
+
+emojiImages.shiu = shiuImage;
+emojiImages.drinking = drinkingImage;
+
 function drawClassicWall(ctx, px, py) {
   ctx.fillStyle = "#666";
   ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
@@ -251,129 +262,480 @@ function drawBombs(ctx, room) {
   }
 }
 
-function drawStickman(ctx, player, cx, cy, currentTime, isMoving) {
-  const color = PLAYER_COLORS[player.number - 1] || "#ffffff";
+function getWalkPose(
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
   const phase = currentTime / 85;
-  const swing = isMoving ? Math.sin(phase) * 6 : 0;
-  const bob = isMoving ? Math.abs(Math.sin(phase)) * 1.5 : 0;
 
-  const headY = cy - 12 - bob;
-  const shoulderY = cy - 2 - bob;
-  const hipY = cy + 9 - bob;
+  const swing =
+    isMoving
+      ? Math.sin(phase) * 6
+      : 0;
 
-  ctx.save();
-  ctx.globalAlpha = player.alive ? 1 : 0.35;
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = 4;
+  const bob =
+    isMoving
+      ? Math.abs(Math.sin(phase)) * 1.5
+      : 0;
+
+  return {
+    swing,
+    bob,
+    headY: cy - 12 - bob,
+    shoulderY: cy - 2 - bob,
+    hipY: cy + 9 - bob
+  };
+}
+
+function getWalkPose(
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const phase = currentTime / 85;
+
+  const swing =
+    isMoving
+      ? Math.sin(phase) * 6
+      : 0;
+
+  const bob =
+    isMoving
+      ? Math.abs(Math.sin(phase)) * 1.5
+      : 0;
+
+  return {
+    swing,
+    bob,
+    headY: cy - 12 - bob,
+    shoulderY: cy - 2 - bob,
+    hipY: cy + 9 - bob
+  };
+}
+
+function drawNinjaSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  ctx.strokeStyle = "#111";
+  ctx.fillStyle = "#111";
+  ctx.lineWidth = 5;
   ctx.lineCap = "round";
 
-  // Cabeça
   ctx.beginPath();
-  ctx.arc(cx, headY, 7, 0, Math.PI * 2);
+  ctx.arc(cx, headY, 8, 0, Math.PI * 2);
   ctx.fill();
 
-  // Corpo
+  ctx.fillStyle = "#d32f2f";
+  ctx.fillRect(
+    cx - 9,
+    headY - 2,
+    18,
+    4
+  );
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(
+    cx - 5,
+    headY - 1,
+    3,
+    2
+  );
+
+  ctx.fillRect(
+    cx + 2,
+    headY - 1,
+    3,
+    2
+  );
+
+  ctx.strokeStyle = "#111";
+
   ctx.beginPath();
   ctx.moveTo(cx, headY + 7);
   ctx.lineTo(cx, hipY);
   ctx.stroke();
 
-  // Braços
   ctx.beginPath();
   ctx.moveTo(cx, shoulderY);
-  ctx.lineTo(cx - 11, shoulderY + 7 + swing);
-  ctx.moveTo(cx, shoulderY);
-  ctx.lineTo(cx + 11, shoulderY + 7 - swing);
-  ctx.stroke();
-
-  // Pernas
-  ctx.beginPath();
-  ctx.moveTo(cx, hipY);
-  ctx.lineTo(cx - 9, hipY + 12 - swing);
-  ctx.moveTo(cx, hipY);
-  ctx.lineTo(cx + 9, hipY + 12 + swing);
-  ctx.stroke();
-
-  // Inicial no peito
-  const initial = String(player.name || player.number)
-    .trim()
-    .charAt(0)
-    .toUpperCase();
-
-  ctx.fillStyle = "#111";
-  ctx.font = "bold 10px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(initial, cx, shoulderY + 5);
-
-  if (player.shield) {
-    ctx.strokeStyle = "#00ffff";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(cx, cy, 24, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  if (player.slowed) {
-    ctx.strokeStyle = "#8b5cf6";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(cx, cy + 12, 17, 0, Math.PI);
-    ctx.stroke();
-  }
-
-  if (player.frozen) {
-    ctx.strokeStyle = "#d9f7ff";
-    ctx.fillStyle = "rgba(120, 210, 255, 0.28)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(cx - 17, cy - 27, 34, 52, 8);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "14px Arial";
-    ctx.fillText("❄", cx, cy - 30);
-  }
-
-  if (player.rooted) {
-    ctx.strokeStyle = "#42a846";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(cx - 13, cy + 20);
-    ctx.quadraticCurveTo(cx - 20, cy + 8, cx - 8, cy + 2);
-    ctx.moveTo(cx + 13, cy + 20);
-    ctx.quadraticCurveTo(cx + 20, cy + 8, cx + 8, cy + 2);
-    ctx.stroke();
-  }
-
-  if (player.isBot) {
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(cx - 17, cy - 25, 34, 48);
-  }
-
-  if (player.blinded) {
-  ctx.globalAlpha = 1;
-  ctx.font = "18px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.fillText(
-    "👁",
-    cx,
-    cy - 32
+  ctx.lineTo(
+    cx - 12,
+    shoulderY + 6 + swing
   );
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(
+    cx + 12,
+    shoulderY + 6 - swing
+  );
+
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx - 10,
+    hipY + 12 - swing
+  );
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(
+    cx + 10,
+    hipY + 12 + swing
+  );
+
+  ctx.stroke();
+
+  // Faixa voando
+  ctx.strokeStyle = "#d32f2f";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(cx + 7, headY - 1);
+  ctx.lineTo(cx + 16, headY - 5);
+  ctx.lineTo(cx + 21, headY);
+  ctx.stroke();
 }
 
+function drawIceMonsterSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    bob
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  ctx.fillStyle = "#8edcf5";
+  ctx.strokeStyle = "#dff8ff";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy - 6 - bob,
+    14,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#123b55";
+
+  ctx.beginPath();
+  ctx.arc(cx - 5, cy - 9 - bob, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 5, cy - 9 - bob, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#8edcf5";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy + 3);
+  ctx.lineTo(
+    cx - 16,
+    cy + 10 + swing
+  );
+
+  ctx.moveTo(cx + 8, cy + 3);
+  ctx.lineTo(
+    cx + 16,
+    cy + 10 - swing
+  );
+
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, cy + 8);
+  ctx.lineTo(
+    cx - 10,
+    cy + 21 - swing
+  );
+
+  ctx.moveTo(cx + 6, cy + 8);
+  ctx.lineTo(
+    cx + 10,
+    cy + 21 + swing
+  );
+
+  ctx.stroke();
+
+  // Chifres de gelo
+  ctx.fillStyle = "#dff8ff";
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 9, cy - 18 - bob);
+  ctx.lineTo(cx - 15, cy - 27 - bob);
+  ctx.lineTo(cx - 4, cy - 20 - bob);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(cx + 9, cy - 18 - bob);
+  ctx.lineTo(cx + 15, cy - 27 - bob);
+  ctx.lineTo(cx + 4, cy - 20 - bob);
+  ctx.fill();
+}
+
+function drawBearSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const phase = currentTime / 90;
+
+  const swing =
+    isMoving
+      ? Math.sin(phase) * 5
+      : 0;
+
+  const bob =
+    isMoving
+      ? Math.abs(Math.sin(phase))
+      : 0;
+
+  ctx.fillStyle = "#8b5a2b";
+  ctx.strokeStyle = "#4a2d16";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy - 7 - bob,
+    13,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(
+    cx - 9,
+    cy - 17 - bob,
+    5,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.arc(
+    cx + 9,
+    cy - 17 - bob,
+    5,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.fillStyle = "#d5aa75";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy - 4 - bob,
+    7,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.fillStyle = "#111";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    cy - 7 - bob,
+    2,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  ctx.strokeStyle = "#8b5a2b";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 8, cy + 3);
+  ctx.lineTo(
+    cx - 15,
+    cy + 12 + swing
+  );
+
+  ctx.moveTo(cx + 8, cy + 3);
+  ctx.lineTo(
+    cx + 15,
+    cy + 12 - swing
+  );
+
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, cy + 8);
+  ctx.lineTo(
+    cx - 9,
+    cy + 21 - swing
+  );
+
+  ctx.moveTo(cx + 6, cy + 8);
+  ctx.lineTo(
+    cx + 9,
+    cy + 21 + swing
+  );
+
+  ctx.stroke();
+}
+
+function drawStickman(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  ctx.save();
+
+  ctx.globalAlpha =
+    player.alive ? 1 : 0.35;
+
+  const skin =
+    player.skin || "stickman";
+
+  if (skin === "ninja") {
+    drawNinjaSkin(
+      ctx,
+      player,
+      cx,
+      cy,
+      currentTime,
+      isMoving
+    );
+  } else if (
+    skin === "iceMonster"
+  ) {
+    drawIceMonsterSkin(
+      ctx,
+      player,
+      cx,
+      cy,
+      currentTime,
+      isMoving
+    );
+  } else if (skin === "bear") {
+    drawBearSkin(
+      ctx,
+      player,
+      cx,
+      cy,
+      currentTime,
+      isMoving
+    );
+  } else {
+    drawClassicSkin(
+      ctx,
+      player,
+      cx,
+      cy,
+      currentTime,
+      isMoving
+    );
+  }
+
+  const initial =
+    String(
+      player.name ||
+      player.number
+    )
+      .trim()
+      .charAt(0)
+      .toUpperCase();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = 3;
+  ctx.font = "bold 11px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.strokeText(
+    initial,
+    cx,
+    cy + 2
+  );
+
+  ctx.fillText(
+    initial,
+    cx,
+    cy + 2
+  );
+
+  drawPlayerEffects(
+    ctx,
+    player,
+    cx,
+    cy
+  );
+
   if (player.emoji) {
-    ctx.globalAlpha = 1;
+
+  if (emojiImages[player.emoji]) {
+
+    ctx.drawImage(
+      emojiImages[player.emoji],
+      cx - 38,
+      cy - 105,
+      76,
+      76
+    );
+
+  } else {
+
     ctx.font = "28px Arial";
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(player.emoji, cx, cy - 43);
+
+    ctx.fillText(
+      player.emoji,
+      cx,
+      cy - 43
+    );
+
   }
+
+}
 
   ctx.restore();
 }
@@ -427,6 +789,237 @@ function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
       cy,
       currentTime,
       isMoving
+    );
+  }
+}
+
+function drawVines(
+  ctx,
+  cx,
+  cy
+) {
+  ctx.save();
+
+  ctx.strokeStyle = "#2e7d32";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 17, cy + 20);
+
+  ctx.bezierCurveTo(
+    cx - 24,
+    cy + 4,
+    cx - 5,
+    cy + 2,
+    cx - 12,
+    cy - 10
+  );
+
+  ctx.bezierCurveTo(
+    cx - 4,
+    cy - 4,
+    cx + 2,
+    cy + 7,
+    cx + 15,
+    cy + 18
+  );
+
+  ctx.stroke();
+
+  ctx.strokeStyle = "#66bb6a";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx + 18, cy + 20);
+
+  ctx.bezierCurveTo(
+    cx + 25,
+    cy + 2,
+    cx + 4,
+    cy,
+    cx + 12,
+    cy - 12
+  );
+
+  ctx.bezierCurveTo(
+    cx + 3,
+    cy - 5,
+    cx - 2,
+    cy + 7,
+    cx - 16,
+    cy + 17
+  );
+
+  ctx.stroke();
+
+  // Folhas
+  ctx.fillStyle = "#43a047";
+
+  const leaves = [
+    [-14, 7],
+    [11, 4],
+    [-4, -7],
+    [15, 14]
+  ];
+
+  for (const [dx, dy] of leaves) {
+    ctx.beginPath();
+
+    ctx.ellipse(
+      cx + dx,
+      cy + dy,
+      5,
+      3,
+      0.6,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawIcePrison(
+  ctx,
+  cx,
+  cy
+) {
+  ctx.save();
+
+  ctx.fillStyle =
+    "rgba(120, 220, 255, 0.42)";
+
+  ctx.strokeStyle =
+    "rgba(220, 250, 255, 0.95)";
+
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+
+  ctx.roundRect(
+    cx - 20,
+    cy - 30,
+    40,
+    58,
+    8
+  );
+
+  ctx.fill();
+  ctx.stroke();
+
+  // Reflexos do gelo
+  ctx.strokeStyle =
+    "rgba(255,255,255,0.8)";
+
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+
+  ctx.moveTo(cx - 13, cy - 22);
+  ctx.lineTo(cx - 5, cy - 10);
+
+  ctx.moveTo(cx + 10, cy - 18);
+  ctx.lineTo(cx + 4, cy);
+
+  ctx.moveTo(cx - 8, cy + 8);
+  ctx.lineTo(cx - 14, cy + 20);
+
+  ctx.stroke();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "16px Arial";
+  ctx.textAlign = "center";
+
+  ctx.fillText(
+    "❄",
+    cx,
+    cy - 34
+  );
+
+  ctx.restore();
+}
+
+function drawPlayerEffects(
+  ctx,
+  player,
+  cx,
+  cy
+) {
+  if (player.shield) {
+    ctx.strokeStyle = "#00ffff";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      cx,
+      cy,
+      25,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.stroke();
+  }
+
+  if (player.slowed) {
+    ctx.strokeStyle = "#8b5cf6";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      cx,
+      cy + 12,
+      18,
+      0,
+      Math.PI
+    );
+
+    ctx.stroke();
+  }
+
+  if (player.rooted) {
+    drawVines(
+      ctx,
+      cx,
+      cy
+    );
+  }
+
+  if (player.frozen) {
+    drawIcePrison(
+      ctx,
+      cx,
+      cy
+    );
+  }
+
+  if (player.blinded) {
+    ctx.font = "18px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+      "👁",
+      cx,
+      cy - 34
+    );
+  }
+
+  if (player.isBot) {
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = 2;
+
+    ctx.strokeRect(
+      cx - 20,
+      cy - 30,
+      40,
+      56
     );
   }
 }
@@ -496,15 +1089,17 @@ function Game({ socket, room, myPlayer }) {
 
       if (emojiMenuOpen) {
         const emojiByKey = {
-          "1": "😂",
-          "2": "😡",
-          "3": "😭",
-          "4": "🔥",
-          "5": "👍",
-          "6": "👎",
-          "7": "💣",
-          "8": "😱"
-        };
+  "1": "😂",
+  "2": "😡",
+  "3": "😭",
+  "4": "🔥",
+  "5": "👍",
+  "6": "👎",
+  "7": "💣",
+  "8": "😱",
+  "9": "shiu",
+  "0": "drinking"
+};
 
         const selectedEmoji = emojiByKey[event.key];
 
@@ -879,6 +1474,8 @@ function Game({ socket, room, myPlayer }) {
           <div>6 — 👎</div>
           <div>7 — 💣</div>
           <div>8 — 😱</div>
+          <div>9 — 🤫 Shiu Fraco</div>
+<div>0 — 🍹 Go Drinking</div>
         </div>
       )}
 

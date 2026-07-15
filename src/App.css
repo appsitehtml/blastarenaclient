@@ -238,3 +238,17 @@ canvas {
   z-index: 120;
   box-shadow: 0 0 18px rgba(139, 92, 246, 0.65);
 }
+
+.skinSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.skinSelector select {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+}

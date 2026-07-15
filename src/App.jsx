@@ -15,6 +15,9 @@ function App() {
   const [mapTheme, setMapTheme] =
   useState("random");
 
+  const [playerSkin, setPlayerSkin] =
+  useState("stickman");
+
   const myPlayer = useMemo(() => {
     return room?.players?.find(player => player.id === socket.id) || null;
   }, [room]);
@@ -34,6 +37,13 @@ function App() {
       setRoom(state);
       setRoomCode(state.code);
     });
+
+    socket.emit("createRoom", {
+  mode,
+  mapTheme,
+  playerName: name,
+  playerSkin
+});
 
     socket.on("errorMessage", msg => setMessage(msg));
 
@@ -60,6 +70,12 @@ function App() {
     mapTheme,
     playerName: name
   });
+
+  socket.emit("joinRoom", {
+  code,
+  playerName: name,
+  playerSkin
+});
 }
 
   function joinRoom() {
@@ -129,6 +145,36 @@ function App() {
 
     <option value="ice">
       ❄️ Gelo
+    </option>
+  </select>
+</div>
+
+<div className="skinSelector">
+  <label htmlFor="playerSkin">
+    Personagem
+  </label>
+
+  <select
+    id="playerSkin"
+    value={playerSkin}
+    onChange={event => {
+      setPlayerSkin(event.target.value);
+    }}
+  >
+    <option value="stickman">
+      Boneco clássico
+    </option>
+
+    <option value="ninja">
+      🥷 Ninja
+    </option>
+
+    <option value="iceMonster">
+      👹 Monstro do gelo
+    </option>
+
+    <option value="bear">
+      🐻 Urso
     </option>
   </select>
 </div>
