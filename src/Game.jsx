@@ -19,6 +19,11 @@ const POWER_COLORS = {
   visionTrap: "#111111"
 };
 
+const [
+  opponentEffectMessage,
+  setOpponentEffectMessage
+] = useState("");
+
 const POWER_ICONS = {
   range: "🔥",
   bomb: "💣",
@@ -349,6 +354,19 @@ function drawStickman(ctx, player, cx, cy, currentTime, isMoving) {
     ctx.strokeRect(cx - 17, cy - 25, 34, 48);
   }
 
+  if (player.blinded) {
+  ctx.globalAlpha = 1;
+  ctx.font = "18px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  ctx.fillText(
+    "👁",
+    cx,
+    cy - 32
+  );
+}
+
   if (player.emoji) {
     ctx.globalAlpha = 1;
     ctx.font = "28px Arial";
@@ -588,6 +606,34 @@ function Game({ socket, room, myPlayer }) {
     myPlayer?.slowTrapCount,
     myPlayer?.visionTrapCount
   ]);
+
+  useEffect(() => {
+  let messageTimer;
+
+  function handleOpponentEffectMessage(message) {
+    setOpponentEffectMessage(message);
+
+    window.clearTimeout(messageTimer);
+
+    messageTimer = window.setTimeout(() => {
+      setOpponentEffectMessage("");
+    }, 3000);
+  }
+
+  socket.on(
+    "opponentEffectMessage",
+    handleOpponentEffectMessage
+  );
+
+  return () => {
+    socket.off(
+      "opponentEffectMessage",
+      handleOpponentEffectMessage
+    );
+
+    window.clearTimeout(messageTimer);
+  };
+}, [socket]);
 
   useEffect(() => {
     let messageTimer;
@@ -841,6 +887,12 @@ function Game({ socket, room, myPlayer }) {
           {trapMessage}
         </div>
       )}
+
+      {opponentEffectMessage && (
+  <div className="opponentEffectMessage">
+    {opponentEffectMessage}
+  </div>
+)}
 
       {room.winner && (
         <div className="winnerBox">
