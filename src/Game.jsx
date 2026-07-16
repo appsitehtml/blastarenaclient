@@ -274,52 +274,6 @@ function drawMap(ctx, room, canvas) {
 }
 
 
-function drawPaintedTiles(ctx, room) {
-  if (room.gameMode !== "paintball") {
-    return;
-  }
-
-  for (const tile of room.paintedTiles || []) {
-    const px = tile.x * TILE;
-    const py = tile.y * TILE;
-
-    ctx.save();
-    ctx.globalAlpha = 0.48;
-    ctx.fillStyle = tile.color || "#ffffff";
-
-    ctx.beginPath();
-    ctx.arc(
-      px + TILE / 2,
-      py + TILE / 2,
-      17,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.globalAlpha = 0.25;
-
-    ctx.beginPath();
-    ctx.arc(
-      px + 13,
-      py + 16,
-      7,
-      0,
-      Math.PI * 2
-    );
-    ctx.arc(
-      px + 35,
-      py + 31,
-      5,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.restore();
-  }
-}
-
 function drawPaintProjectiles(ctx, room) {
   if (room.gameMode !== "paintball") {
     return;
@@ -333,29 +287,58 @@ function drawPaintProjectiles(ctx, room) {
     ctx.fillStyle = projectile.color || "#ffffff";
 
     ctx.beginPath();
-    ctx.arc(
-      cx,
-      cy,
-      8,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.globalAlpha = 0.45;
-
+    ctx.globalAlpha = 0.35;
     ctx.beginPath();
-    ctx.arc(
-      cx - 6,
-      cy + 5,
-      4,
-      0,
-      Math.PI * 2
-    );
+    ctx.arc(cx - 7, cy + 4, 3, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
   }
+}
+
+function drawPaintGun(ctx, player, cx, cy) {
+  const direction =
+    player.lastDirection || "right";
+
+  const delta = {
+    up: { x: 0, y: -1 },
+    down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 },
+    right: { x: 1, y: 0 }
+  }[direction];
+
+  if (!delta) {
+    return;
+  }
+
+  const startX = cx + delta.x * 7;
+  const startY = cy + delta.y * 7;
+  const endX = cx + delta.x * 20;
+  const endY = cy + delta.y * 20;
+
+  ctx.save();
+
+  ctx.strokeStyle =
+    PLAYER_COLORS[player.number - 1] ||
+    "#ffffff";
+
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
+  ctx.stroke();
+
+  ctx.fillStyle = "#1d1d1d";
+  ctx.beginPath();
+  ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
 }
 
 function drawPowerUps(ctx, room) {
@@ -2529,14 +2512,12 @@ function Game({ socket, room, myPlayer }) {
   const mapCacheKeyRef = useRef("");
 
   const isPaintball =
-    room.gameMode === "paintball" ||
-    Number(room.matchEndsAt || 0) > 0;
+    room.gameMode === "paintball";
 
   const [selectedItem, setSelectedItem] = useState("bomb");
   const [trapMessage, setTrapMessage] = useState("");
   const [chatText, setChatText] = useState("");
   const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
-  const [clockNow, setClockNow] = useState(Date.now());
 
   const [
   opponentEffectMessage,
@@ -2612,6 +2593,15 @@ function Game({ socket, room, myPlayer }) {
         event.key === "3"
       ) {
         setSelectedItem("visionTrap");
+        return;
+      }
+
+      if (
+        isPaintball &&
+        (event.key === "r" || event.key === "R")
+      ) {
+        event.preventDefault();
+        socket.emit("reloadPaint");
         return;
       }
 
@@ -2707,17 +2697,6 @@ function Game({ socket, room, myPlayer }) {
   myPlayer?.visionTrapCount,
   isPaintball
 ]);
-
-  useEffect(() => {
-    const timer =
-      window.setInterval(() => {
-        setClockNow(Date.now());
-      }, 500);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
 
   useEffect(() => {
   let messageTimer;
@@ -2881,11 +2860,6 @@ lastRenderTime = currentTime;
     canvas
   );
 }
-      drawPaintedTiles(
-        ctx,
-        currentRoom
-      );
-
       if (!isPaintball) {
         drawPowerUps(
           ctx,
@@ -2917,7 +2891,23 @@ lastRenderTime = currentTime;
         interpolation
       );
 
-      if (!isPaintball) {
+      if (isPaintball) {
+        for (const player of currentRoom.players || []) {
+          const visual =
+            visualPlayersRef.current.get(player.id);
+
+          if (!visual) {
+            continue;
+          }
+
+          drawPaintGun(
+            ctx,
+            player,
+            visual.x * TILE + TILE / 2,
+            visual.y * TILE + TILE / 2
+          );
+        }
+      } else {
         drawBombs(
           ctx,
           currentRoom
@@ -2969,29 +2959,6 @@ lastRenderTime = currentTime;
   const playerTwoName =
     playerTwo?.name || "Jogador 2";
 
-  const paintSecondsLeft =
-    isPaintball
-      ? Math.max(
-          0,
-          Math.ceil(
-            (
-              (room.matchEndsAt || 0) -
-              clockNow
-            ) / 1000
-          )
-        )
-      : 0;
-
-  const paintMinutes =
-    Math.floor(
-      paintSecondsLeft / 60
-    );
-
-  const paintSeconds =
-    String(
-      paintSecondsLeft % 60
-    ).padStart(2, "0");
-
   function sendChatMessage(event) {
     event.preventDefault();
 
@@ -3011,20 +2978,25 @@ lastRenderTime = currentTime;
         {isPaintball ? (
           <>
             <span>
-              🎨 {playerOneName}{" "}
-              {room.paintScores?.player1 || 0}
+              🎯 {playerOneName}{" "}
+              {room.paintRoundWins?.player1 || 0}
               {" x "}
-              {room.paintScores?.player2 || 0}
+              {room.paintRoundWins?.player2 || 0}
               {" "}{playerTwoName}
             </span>
 
             <span>
-              ⏱ {paintMinutes}:{paintSeconds}
+              ❤️ {myPlayer?.paintHealth ?? 5}
             </span>
 
             <span>
-              ❤️ {myPlayer?.paintHealth ?? 3}
+              🔫 {myPlayer?.paintAmmo ?? 10}
+              /{myPlayer?.paintMaxAmmo ?? 10}
             </span>
+
+            {myPlayer?.paintReloading && (
+              <span>🔄 Recarregando...</span>
+            )}
           </>
         ) : (
           <>
@@ -3062,7 +3034,7 @@ lastRenderTime = currentTime;
 
         <span>
           {isPaintball
-            ? "WASD / Setas • Espaço atira"
+            ? "WASD / Setas • Espaço atira • R recarrega"
             : "WASD / Setas • Espaço"}
         </span>
       </div>
@@ -3121,7 +3093,7 @@ lastRenderTime = currentTime;
 
       {isPaintball && (
         <div className="paintInstructions">
-          🎨 Espaço para atirar • 3 pontos por acerto • Pinte o maior território
+          🎯 Espaço para atirar • R para recarregar • Elimine o adversário
         </div>
       )}
 
@@ -3162,7 +3134,7 @@ lastRenderTime = currentTime;
                 : room.winner === "Bots"
                   ? "BOTS VENCERAM"
                   : isPaintball
-                    ? `🎨 ${room.winner} venceu o Paint Clash`
+                    ? `🎯 ${room.winner} venceu o duelo de Paintball`
                     : `${room.winner} venceu`}
           </h2>
 

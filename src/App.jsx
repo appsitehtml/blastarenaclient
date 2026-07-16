@@ -60,8 +60,8 @@ function App() {
       setRoomCode(state.code);
     }
 
-    function handleErrorMessage(msg) {
-      setMessage(msg);
+    function handleErrorMessage(text) {
+      setMessage(text);
     }
 
     socket.on(
@@ -202,7 +202,7 @@ function App() {
 
   function getGameModeName(mode) {
     if (mode === "paintball") {
-      return "🎨 Paint Clash";
+      return "🎯 Duelo Paintball";
     }
 
     return "💣 Blast Arena";
@@ -257,10 +257,23 @@ function App() {
                 </option>
 
                 <option value="paintball">
-                  🎨 Paint Clash
+                  🎯 Duelo Paintball
                 </option>
               </select>
             </div>
+
+            {gameMode === "paintball" && (
+              <div className="paintModeInfo">
+                <strong>
+                  Duelo Paintball
+                </strong>
+
+                <span>
+                  5 vidas • 10 tiros •
+                  Espaço atira • R recarrega
+                </span>
+              </div>
+            )}
 
             <div className="mapSelector">
               <label htmlFor="mapTheme">
@@ -380,7 +393,7 @@ function App() {
               }}
             >
               {gameMode === "paintball"
-                ? "Criar sala Paint Clash"
+                ? "Criar duelo Paintball"
                 : "Criar sala 1x1"}
             </button>
 
@@ -512,7 +525,7 @@ function App() {
                   >
                     {room.gameMode ===
                     "paintball"
-                      ? "Iniciar Paint Clash"
+                      ? "Iniciar duelo Paintball"
                       : "Iniciar jogo"}
                   </button>
                 )}
