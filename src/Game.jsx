@@ -273,6 +273,91 @@ function drawMap(ctx, room, canvas) {
   }
 }
 
+
+function drawPaintedTiles(ctx, room) {
+  if (room.gameMode !== "paintball") {
+    return;
+  }
+
+  for (const tile of room.paintedTiles || []) {
+    const px = tile.x * TILE;
+    const py = tile.y * TILE;
+
+    ctx.save();
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = tile.color || "#ffffff";
+
+    ctx.beginPath();
+    ctx.arc(
+      px + TILE / 2,
+      py + TILE / 2,
+      17,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.globalAlpha = 0.25;
+
+    ctx.beginPath();
+    ctx.arc(
+      px + 13,
+      py + 16,
+      7,
+      0,
+      Math.PI * 2
+    );
+    ctx.arc(
+      px + 35,
+      py + 31,
+      5,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
+function drawPaintProjectiles(ctx, room) {
+  if (room.gameMode !== "paintball") {
+    return;
+  }
+
+  for (const projectile of room.paintProjectiles || []) {
+    const cx = projectile.x * TILE + TILE / 2;
+    const cy = projectile.y * TILE + TILE / 2;
+
+    ctx.save();
+    ctx.fillStyle = projectile.color || "#ffffff";
+
+    ctx.beginPath();
+    ctx.arc(
+      cx,
+      cy,
+      8,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.globalAlpha = 0.45;
+
+    ctx.beginPath();
+    ctx.arc(
+      cx - 6,
+      cy + 5,
+      4,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 function drawPowerUps(ctx, room) {
   for (const power of room.powerUps || []) {
     const cx = power.x * TILE + TILE / 2;
@@ -2441,12 +2526,17 @@ function Game({ socket, room, myPlayer }) {
   const animationFrameRef = useRef(null);
   const roomRef = useRef(room);
   const mapCanvasRef = useRef(null);
-const mapCacheKeyRef = useRef("");
+  const mapCacheKeyRef = useRef("");
+
+  const isPaintball =
+    room.gameMode === "paintball" ||
+    Number(room.matchEndsAt || 0) > 0;
 
   const [selectedItem, setSelectedItem] = useState("bomb");
   const [trapMessage, setTrapMessage] = useState("");
   const [chatText, setChatText] = useState("");
   const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
+  const [clockNow, setClockNow] = useState(Date.now());
 
   const [
   opponentEffectMessage,
@@ -2464,15 +2554,18 @@ const mapCacheKeyRef = useRef("");
         return;
       }
 
-      if (event.key === "f" || event.key === "F") {
-        event.preventDefault();
-        if (room.gameMode === "paintball") {
-  socket.emit("shootPaint");
+      if (
+  event.key === "f" ||
+  event.key === "F"
+) {
+  event.preventDefault();
+
+  setEmojiMenuOpen(
+    current => !current
+  );
+
   return;
 }
-        setEmojiMenuOpen(current => !current);
-        return;
-      }
 
       if (emojiMenuOpen) {
         const emojiByKey = {
@@ -2498,60 +2591,85 @@ const mapCacheKeyRef = useRef("");
         return;
       }
 
-      if (event.key === "1") {
+      if (
+        !isPaintball &&
+        event.key === "1"
+      ) {
         setSelectedItem("bomb");
         return;
       }
 
-      if (event.key === "2") {
+      if (
+        !isPaintball &&
+        event.key === "2"
+      ) {
         setSelectedItem("slowTrap");
         return;
       }
 
-      if (event.key === "3") {
+      if (
+        !isPaintball &&
+        event.key === "3"
+      ) {
         setSelectedItem("visionTrap");
         return;
       }
 
       if (event.code === "Space") {
-        event.preventDefault();
+  event.preventDefault();
 
-        if (selectedItem === "bomb") {
-          socket.emit("bomb");
-          return;
-        }
+  if (isPaintball) {
+    socket.emit("shootPaint");
+    return;
+  }
 
-        if (selectedItem === "slowTrap") {
-          if ((myPlayer?.slowTrapCount || 0) <= 0) {
-            setTrapMessage("Você não possui poções de lentidão.");
+  if (selectedItem === "bomb") {
+    socket.emit("bomb");
+    return;
+  }
 
-            window.setTimeout(() => {
-              setTrapMessage("");
-            }, 2500);
+  if (selectedItem === "slowTrap") {
+    if ((myPlayer?.slowTrapCount || 0) <= 0) {
+      setTrapMessage(
+        "Você não possui poções de lentidão."
+      );
 
-            return;
-          }
+      window.setTimeout(() => {
+        setTrapMessage("");
+      }, 2500);
 
-          socket.emit("placeHiddenTrap", "slowTrap");
-          return;
-        }
+      return;
+    }
 
-        if (selectedItem === "visionTrap") {
-          if ((myPlayer?.visionTrapCount || 0) <= 0) {
-            setTrapMessage("Você não possui armadilhas de visão.");
+    socket.emit(
+      "placeHiddenTrap",
+      "slowTrap"
+    );
 
-            window.setTimeout(() => {
-              setTrapMessage("");
-            }, 2500);
+    return;
+  }
 
-            return;
-          }
+  if (selectedItem === "visionTrap") {
+    if ((myPlayer?.visionTrapCount || 0) <= 0) {
+      setTrapMessage(
+        "Você não possui armadilhas de visão."
+      );
 
-          socket.emit("placeHiddenTrap", "visionTrap");
-        }
+      window.setTimeout(() => {
+        setTrapMessage("");
+      }, 2500);
 
-        return;
-      }
+      return;
+    }
+
+    socket.emit(
+      "placeHiddenTrap",
+      "visionTrap"
+    );
+  }
+
+  return;
+}
 
       const directions = {
         w: "up",
@@ -2582,12 +2700,24 @@ const mapCacheKeyRef = useRef("");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    socket,
-    selectedItem,
-    emojiMenuOpen,
-    myPlayer?.slowTrapCount,
-    myPlayer?.visionTrapCount
-  ]);
+  socket,
+  selectedItem,
+  emojiMenuOpen,
+  myPlayer?.slowTrapCount,
+  myPlayer?.visionTrapCount,
+  isPaintball
+]);
+
+  useEffect(() => {
+    const timer =
+      window.setInterval(() => {
+        setClockNow(Date.now());
+      }, 500);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   useEffect(() => {
   let messageTimer;
@@ -2642,9 +2772,10 @@ const mapCacheKeyRef = useRef("");
     roomRef.current = room;
 
     const mapCacheKey = JSON.stringify({
-  theme: room.mapTheme,
-  map: room.map
-});
+      theme: room.mapTheme,
+      gameMode: room.gameMode,
+      map: room.map
+    });
 
 if (
   mapCacheKeyRef.current !==
@@ -2707,7 +2838,7 @@ if (
     let previousTime = performance.now();
 
     let lastRenderTime = 0;
-const FRAME_INTERVAL = 1000 / 45;
+    const FRAME_INTERVAL = 1000 / 45;
 
     function draw(currentTime) {
       const currentRoom = roomRef.current;
@@ -2750,8 +2881,34 @@ lastRenderTime = currentTime;
     canvas
   );
 }
-      drawPowerUps(ctx, currentRoom);
-      drawExplosions(ctx, currentRoom);
+      drawPaintedTiles(
+        ctx,
+        currentRoom
+      );
+
+      if (!isPaintball) {
+        drawPowerUps(
+          ctx,
+          currentRoom
+        );
+
+        drawHunters(
+          ctx,
+          currentRoom,
+          currentTime
+        );
+
+        drawExplosions(
+          ctx,
+          currentRoom
+        );
+      }
+
+      drawPaintProjectiles(
+        ctx,
+        currentRoom
+      );
+
       drawPlayers(
         ctx,
         currentRoom,
@@ -2759,14 +2916,21 @@ lastRenderTime = currentTime;
         currentTime,
         interpolation
       );
-      drawBombs(ctx, currentRoom);
-      drawBlindnessOverlay(
-        ctx,
-        currentRoom,
-        visualPlayersRef.current,
-        canvas,
-        socket.id
-      );
+
+      if (!isPaintball) {
+        drawBombs(
+          ctx,
+          currentRoom
+        );
+
+        drawBlindnessOverlay(
+          ctx,
+          currentRoom,
+          visualPlayersRef.current,
+          canvas,
+          socket.id
+        );
+      }
 
       animationFrameRef.current = requestAnimationFrame(draw);
     }
@@ -2778,7 +2942,7 @@ lastRenderTime = currentTime;
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [isPaintball, socket.id]);
 
   const humans =
     room.players?.filter(player => {
@@ -2805,6 +2969,29 @@ lastRenderTime = currentTime;
   const playerTwoName =
     playerTwo?.name || "Jogador 2";
 
+  const paintSecondsLeft =
+    isPaintball
+      ? Math.max(
+          0,
+          Math.ceil(
+            (
+              (room.matchEndsAt || 0) -
+              clockNow
+            ) / 1000
+          )
+        )
+      : 0;
+
+  const paintMinutes =
+    Math.floor(
+      paintSecondsLeft / 60
+    );
+
+  const paintSeconds =
+    String(
+      paintSecondsLeft % 60
+    ).padStart(2, "0");
+
   function sendChatMessage(event) {
     event.preventDefault();
 
@@ -2821,34 +3008,67 @@ lastRenderTime = currentTime;
   return (
     <main className="gamePage">
       <div className="gameTop">
-        <span>
-          {playerOneName} {room.score?.player1 || 0}
-          {" x "}
-          {room.score?.player2 || 0} {playerTwoName}
-        </span>
+        {isPaintball ? (
+          <>
+            <span>
+              🎨 {playerOneName}{" "}
+              {room.paintScores?.player1 || 0}
+              {" x "}
+              {room.paintScores?.player2 || 0}
+              {" "}{playerTwoName}
+            </span>
 
-        {room.winStreak?.count > 1 && (
-          <span>
-            🔥{" "}
-            {room.winStreak.playerNumber === 1
-              ? playerOneName
-              : playerTwoName}
-            : {room.winStreak.count} vitórias seguidas
-          </span>
+            <span>
+              ⏱ {paintMinutes}:{paintSeconds}
+            </span>
+
+            <span>
+              ❤️ {myPlayer?.paintHealth ?? 3}
+            </span>
+          </>
+        ) : (
+          <>
+            <span>
+              {playerOneName}{" "}
+              {room.score?.player1 || 0}
+              {" x "}
+              {room.score?.player2 || 0}
+              {" "}{playerTwoName}
+            </span>
+
+            {room.winStreak?.count > 1 && (
+              <span>
+                🔥{" "}
+                {room.winStreak.playerNumber === 1
+                  ? playerOneName
+                  : playerTwoName}
+                : {room.winStreak.count} vitórias seguidas
+              </span>
+            )}
+          </>
         )}
 
         <strong>Sala {room.code}</strong>
-        <span>Jogador {myPlayer?.number || "-"}</span>
+
+        <span>
+          Jogador {myPlayer?.number || "-"}
+        </span>
+
         <span>Humanos {humans}</span>
 
         {room.mode === "duoBots" && (
           <span>Bots {bots}</span>
         )}
 
-        <span>WASD / Setas • Espaço</span>
+        <span>
+          {isPaintball
+            ? "WASD / Setas • Espaço atira"
+            : "WASD / Setas • Espaço"}
+        </span>
       </div>
 
-      <div className="powerInventory">
+      {!isPaintball && (
+        <div className="powerInventory">
         <button
           type="button"
           className={
@@ -2896,7 +3116,14 @@ lastRenderTime = currentTime;
         >
           3 — 👁 Visão: {myPlayer?.visionTrapCount || 0}
         </button>
-      </div>
+        </div>
+      )}
+
+      {isPaintball && (
+        <div className="paintInstructions">
+          🎨 Espaço para atirar • 3 pontos por acerto • Pinte o maior território
+        </div>
+      )}
 
       {emojiMenuOpen && (
         <div className="emojiMenu">
@@ -2934,7 +3161,9 @@ lastRenderTime = currentTime;
                 ? "VOCÊS VENCERAM"
                 : room.winner === "Bots"
                   ? "BOTS VENCERAM"
-                  : `${room.winner} venceu`}
+                  : isPaintball
+                    ? `🎨 ${room.winner} venceu o Paint Clash`
+                    : `${room.winner} venceu`}
           </h2>
 
           <button
