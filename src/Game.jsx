@@ -2284,6 +2284,14 @@ function drawPlayers(
       ctx.globalAlpha = 0.3;
     }
 
+    if (player.paintInvulnerable) {
+  const blink =
+    Math.floor(currentTime / 100) % 2;
+
+  ctx.globalAlpha =
+    blink === 0 ? 0.35 : 1;
+}
+
     drawStickman(
       ctx,
       player,
@@ -3262,7 +3270,7 @@ lastRenderTime = currentTime;
             </span>
 
             <span>
-              ❤️ {myPlayer?.paintHealth ?? 5}
+              ❤️ {myPlayer?.paintHealth ?? 1}
             </span>
 
             <span>
