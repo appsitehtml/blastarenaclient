@@ -2712,7 +2712,18 @@ function Game({ socket, room, myPlayer }) {
   const animationFrameRef = useRef(null);
   const roomRef = useRef(room);
   const mapCanvasRef = useRef(null);
-  const mapCacheKeyRef = useRef("");
+
+  const mouseAimRef = useRef({
+    x: 0,
+    y: 0,
+    angle: 0
+  });
+
+  const lastAimSentAtRef =
+    useRef(0);
+
+  const mapCacheKeyRef =
+    useRef("");
 
   const isPaintball =
     room.gameMode === "paintball";
