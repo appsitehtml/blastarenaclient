@@ -13,6 +13,8 @@ function App() {
   const [playerName, setPlayerName] = useState("");
   const [mapTheme, setMapTheme] = useState("random");
   const [playerSkin, setPlayerSkin] = useState("stickman");
+  const [gameMode, setGameMode] =
+  useState("classic");
 
   const myPlayer = useMemo(() => {
     return (
@@ -66,12 +68,12 @@ function App() {
     setMessage("");
 
     socket.emit("createRoom", {
-      mode,
-      mapTheme,
-      playerName: name,
-      playerSkin
-    });
-  }
+  mode,
+  gameMode,
+  mapTheme,
+  playerName: name,
+  playerSkin
+});
 
   function joinRoom() {
     const code = inputCode.trim().toUpperCase();
@@ -121,6 +123,29 @@ function App() {
 
         {!roomCode && (
           <>
+
+<div className="modeSelector">
+  <label htmlFor="gameMode">
+    Modo de jogo
+  </label>
+
+  <select
+    id="gameMode"
+    value={gameMode}
+    onChange={event => {
+      setGameMode(event.target.value);
+    }}
+  >
+    <option value="classic">
+      💣 Blast Arena
+    </option>
+
+    <option value="paintball">
+      🎨 Paint Clash
+    </option>
+  </select>
+</div>
+
             <div className="mapSelector">
               <label htmlFor="mapTheme">
                 Mapa
@@ -235,14 +260,14 @@ function App() {
               Criar sala 1x1
             </button>
 
-            <button
-              className="secondaryButton"
-              onClick={() =>
-                createRoom("duoBots")
-              }
-            >
-              Criar sala 2 jogadores vs 2 bots
-            </button>
+            {gameMode === "classic" && (
+  <button
+    className="secondaryButton"
+    onClick={() => createRoom("duoBots")}
+  >
+    Criar sala 2 jogadores vs 2 bots
+  </button>
+)}
 
             <div className="joinBox">
               <input
@@ -309,6 +334,13 @@ function App() {
         </p>
 
         <p>
+  Jogo:{" "}
+  {room.gameMode === "paintball"
+    ? "🎨 Paint Clash"
+    : "💣 Blast Arena"}
+</p>
+
+        <p>
           Modo:{" "}
           {room.mode === "duoBots"
             ? "2 jogadores vs 2 bots"
@@ -359,4 +391,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;}

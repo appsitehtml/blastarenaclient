@@ -2442,6 +2442,10 @@ const mapCacheKeyRef = useRef("");
 
       if (event.key === "f" || event.key === "F") {
         event.preventDefault();
+        if (room.gameMode === "paintball") {
+  socket.emit("shootPaint");
+  return;
+}
         setEmojiMenuOpen(current => !current);
         return;
       }
