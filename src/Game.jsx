@@ -16,7 +16,8 @@ const POWER_COLORS = {
   shield: "#ff55ff",
   kick: "#ff8c00",
   slowTrap: "#8b5cf6",
-  visionTrap: "#111111"
+  visionTrap: "#111111",
+  hunterSummon: "#ff3b30"
 };
 
 const POWER_ICONS = {
@@ -26,7 +27,8 @@ const POWER_ICONS = {
   shield: "🛡",
   kick: "🥾",
   slowTrap: "🧪",
-  visionTrap: "👁"
+  visionTrap: "👁",
+  hunterSummon: "🐾"
 };
 
 const emojiImages = {};
@@ -1971,6 +1973,84 @@ if (player.emoji) {
   ctx.restore();
 }
 
+function drawHunters(
+  ctx,
+  room,
+  currentTime
+) {
+  for (
+    const hunter of room.hunters || []
+  ) {
+    const cx =
+      hunter.x * TILE + TILE / 2;
+
+    const cy =
+      hunter.y * TILE + TILE / 2;
+
+    const age =
+      Date.now() -
+      (hunter.createdAt || Date.now());
+
+    const emerging =
+      Math.min(1, age / 450);
+
+    const bounce =
+      Math.sin(currentTime / 110) * 2;
+
+    ctx.save();
+
+    ctx.globalAlpha = emerging;
+
+    /*
+      Efeito de sair do chão.
+    */
+    ctx.fillStyle =
+      "rgba(0, 0, 0, 0.32)";
+
+    ctx.beginPath();
+    ctx.ellipse(
+      cx,
+      cy + 15,
+      16 * emerging,
+      6 * emerging,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.font =
+      hunter.type === "penguin"
+        ? "30px Arial"
+        : hunter.type ===
+            "magmaLizard"
+          ? "28px Arial"
+          : "30px Arial";
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    const symbol =
+      hunter.type === "penguin"
+        ? "🐧"
+        : hunter.type ===
+            "magmaLizard"
+          ? "🦎"
+          : "🐍";
+
+    ctx.fillText(
+      symbol,
+      cx,
+      cy +
+        6 -
+        emerging * 15 +
+        bounce
+    );
+
+    ctx.restore();
+  }
+}
+
 function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
   for (const player of room.players || []) {
     let visual = visualPlayers.get(player.id);
@@ -2021,6 +2101,24 @@ function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
       currentTime,
       isMoving
     );
+
+    drawPowerUps(ctx, currentRoom);
+
+drawHunters(
+  ctx,
+  currentRoom,
+  currentTime
+);
+
+drawExplosions(ctx, currentRoom);
+
+drawPlayers(
+  ctx,
+  currentRoom,
+  visualPlayersRef.current,
+  currentTime,
+  interpolation
+);
   }
 }
 
