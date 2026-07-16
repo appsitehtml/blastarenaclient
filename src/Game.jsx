@@ -344,119 +344,6 @@ function drawPaintTires(ctx, room) {
   }
 }
 
-function drawPaintFlags(ctx, room, currentTime) {
-  if (room.gameMode !== "paintball") {
-    return;
-  }
-
-  const pulse =
-    1 +
-    Math.sin(currentTime / 180) * 0.08;
-
-  for (const flag of room.paintFlags || []) {
-    if (flag.carrierId) {
-      continue;
-    }
-
-    const cx =
-      flag.x * TILE + TILE / 2;
-
-    const cy =
-      flag.y * TILE + TILE / 2;
-
-    const color =
-      flag.team === 1
-        ? "#4da3ff"
-        : "#ff4d4d";
-
-    ctx.save();
-
-    ctx.strokeStyle = "#eeeeee";
-    ctx.lineWidth = 3;
-
-    ctx.beginPath();
-    ctx.moveTo(cx - 8, cy + 17);
-    ctx.lineTo(cx - 8, cy - 18);
-    ctx.stroke();
-
-    ctx.fillStyle = color;
-
-    ctx.beginPath();
-    ctx.moveTo(cx - 6, cy - 17);
-    ctx.lineTo(cx + 15, cy - 10);
-    ctx.lineTo(cx - 6, cy - 2);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = color;
-
-    ctx.beginPath();
-    ctx.arc(
-      cx,
-      cy,
-      20 * pulse,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-  for (const player of room.players || []) {
-    if (!player.carryingFlagTeam) {
-      continue;
-    }
-
-    const carriedFlag =
-      (room.paintFlags || []).find(flag => {
-        return flag.team === player.carryingFlagTeam;
-      });
-
-    if (!carriedFlag) {
-      continue;
-    }
-  }
-}
-
-function drawCarriedFlag(
-  ctx,
-  player,
-  cx,
-  cy
-) {
-  if (!player.carryingFlagTeam) {
-    return;
-  }
-
-  const color =
-    player.carryingFlagTeam === 1
-      ? "#4da3ff"
-      : "#ff4d4d";
-
-  ctx.save();
-
-  ctx.strokeStyle = "#eeeeee";
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  ctx.moveTo(cx + 11, cy + 8);
-  ctx.lineTo(cx + 11, cy - 25);
-  ctx.stroke();
-
-  ctx.fillStyle = color;
-
-  ctx.beginPath();
-  ctx.moveTo(cx + 12, cy - 24);
-  ctx.lineTo(cx + 28, cy - 18);
-  ctx.lineTo(cx + 12, cy - 11);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.restore();
-}
-
 function drawPaintProjectiles(ctx, room) {
   if (room.gameMode !== "paintball") {
     return;
@@ -2406,13 +2293,6 @@ function drawPlayers(
       isMoving
     );
 
-    drawCarriedFlag(
-      ctx,
-      player,
-      cx,
-      cy
-    );
-
     ctx.restore();
   }
 }
@@ -3108,11 +2988,19 @@ if (
   mapCacheKeyRef.current =
     mapCacheKey;
 
+  const mapWidth =
+    (room.map?.[0]?.length || 13) *
+    TILE;
+
+  const mapHeight =
+    (room.map?.length || 11) *
+    TILE;
+
   mapCanvasRef.current =
     createMapCache(
       room,
-      13 * TILE,
-      11 * TILE
+      mapWidth,
+      mapHeight
     );
 }
 
@@ -3206,12 +3094,6 @@ lastRenderTime = currentTime;
   );
 }
       if (isPaintball) {
-        drawPaintFlags(
-          ctx,
-          currentRoom,
-          currentTime
-        );
-
         drawPaintTires(
           ctx,
           currentRoom
@@ -3370,9 +3252,13 @@ lastRenderTime = currentTime;
             </span>
 
             <span>
-              🚩 {room.paintFlagScores?.player1 || 0}
+              ☠️ {room.paintKillScores?.player1 || 0}
               {" x "}
-              {room.paintFlagScores?.player2 || 0}
+              {room.paintKillScores?.player2 || 0}
+            </span>
+
+            <span>
+              🎯 Meta: 25 eliminações
             </span>
 
             <span>
@@ -3495,7 +3381,7 @@ lastRenderTime = currentTime;
 
       {isPaintball && (
         <div className="paintInstructions">
-          🎯 Mouse mira • Clique ou Espaço atira • R recarrega • Capture a bandeira
+          🎯 Mouse mira • Clique ou Espaço atira • R recarrega • Primeiro a 25 eliminações
         </div>
       )}
 
@@ -3536,7 +3422,7 @@ lastRenderTime = currentTime;
                 : room.winner === "Bots"
                   ? "BOTS VENCERAM"
                   : isPaintball
-                    ? `🚩 ${room.winner} venceu a Captura da Bandeira`
+                    ? `☠️ ${room.winner} venceu o Mata-Mata`
                     : `${room.winner} venceu`}
           </h2>
 
@@ -3553,8 +3439,14 @@ lastRenderTime = currentTime;
 
       <canvas
         ref={canvasRef}
-        width={13 * TILE}
-        height={11 * TILE}
+        width={
+          (room.map?.[0]?.length || 17) *
+          TILE
+        }
+        height={
+          (room.map?.length || 11) *
+          TILE
+        }
       />
 
       <div className="gameChat">

@@ -202,7 +202,7 @@ function App() {
 
   function getGameModeName(mode) {
     if (mode === "paintball") {
-      return "🚩 Paintball — Captura da Bandeira";
+      return "☠️ Paintball Mata-Mata";
     }
 
     return "💣 Blast Arena";
@@ -257,7 +257,7 @@ function App() {
                 </option>
 
                 <option value="paintball">
-                  🚩 Paintball — Captura da Bandeira
+                  ☠️ Paintball Mata-Mata
                 </option>
               </select>
             </div>
@@ -269,7 +269,7 @@ function App() {
                 </strong>
 
                 <span>
-                  Capture a bandeira inimiga •
+                  Primeiro a 25 eliminações •
                   Mouse mira • Clique atira • R recarrega
                 </span>
               </div>
@@ -393,7 +393,7 @@ function App() {
               }}
             >
               {gameMode === "paintball"
-                ? "Criar Captura da Bandeira"
+                ? "Criar Paintball Mata-Mata"
                 : "Criar sala 1x1"}
             </button>
 
@@ -525,7 +525,7 @@ function App() {
                   >
                     {room.gameMode ===
                     "paintball"
-                      ? "Iniciar Captura da Bandeira"
+                      ? "Iniciar Paintball Mata-Mata"
                       : "Iniciar jogo"}
                   </button>
                 )}
