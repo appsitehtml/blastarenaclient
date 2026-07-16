@@ -17,7 +17,11 @@ const POWER_COLORS = {
   kick: "#ff8c00",
   slowTrap: "#8b5cf6",
   visionTrap: "#111111",
-  hunterSummon: "#ff3b30"
+  hunterSummon: "#ff3b30",
+  rapidFire: "#00e5ff",
+  armorVest: "#66ff99",
+  heavyShot: "#ff7043",
+  doubleMagazine: "#ffd54f"
 };
 
 const POWER_ICONS = {
@@ -28,7 +32,11 @@ const POWER_ICONS = {
   kick: "🥾",
   slowTrap: "🧪",
   visionTrap: "👁",
-  hunterSummon: "🐾"
+  hunterSummon: "🐾",
+  rapidFire: "⚡",
+  armorVest: "🦺",
+  heavyShot: "💥",
+  doubleMagazine: "🔫"
 };
 
 const emojiImages = {};
@@ -274,6 +282,181 @@ function drawMap(ctx, room, canvas) {
 }
 
 
+
+function drawPaintTires(ctx, room) {
+  if (room.gameMode !== "paintball") {
+    return;
+  }
+
+  for (const tire of room.paintBarriers || []) {
+    const cx = tire.x * TILE + TILE / 2;
+    const cy = tire.y * TILE + TILE / 2;
+
+    ctx.save();
+
+    ctx.fillStyle = "#171717";
+    ctx.strokeStyle = "#4b4b4b";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.arc(
+      cx,
+      cy,
+      18,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#303030";
+
+    ctx.beginPath();
+    ctx.arc(
+      cx,
+      cy,
+      9,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.strokeStyle = "#656565";
+    ctx.lineWidth = 2;
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle =
+        index * (Math.PI / 4);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        cx + Math.cos(angle) * 13,
+        cy + Math.sin(angle) * 13
+      );
+      ctx.lineTo(
+        cx + Math.cos(angle) * 18,
+        cy + Math.sin(angle) * 18
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+}
+
+function drawPaintFlags(ctx, room, currentTime) {
+  if (room.gameMode !== "paintball") {
+    return;
+  }
+
+  const pulse =
+    1 +
+    Math.sin(currentTime / 180) * 0.08;
+
+  for (const flag of room.paintFlags || []) {
+    if (flag.carrierId) {
+      continue;
+    }
+
+    const cx =
+      flag.x * TILE + TILE / 2;
+
+    const cy =
+      flag.y * TILE + TILE / 2;
+
+    const color =
+      flag.team === 1
+        ? "#4da3ff"
+        : "#ff4d4d";
+
+    ctx.save();
+
+    ctx.strokeStyle = "#eeeeee";
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+    ctx.moveTo(cx - 8, cy + 17);
+    ctx.lineTo(cx - 8, cy - 18);
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+    ctx.moveTo(cx - 6, cy - 17);
+    ctx.lineTo(cx + 15, cy - 10);
+    ctx.lineTo(cx - 6, cy - 2);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+    ctx.arc(
+      cx,
+      cy,
+      20 * pulse,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  for (const player of room.players || []) {
+    if (!player.carryingFlagTeam) {
+      continue;
+    }
+
+    const carriedFlag =
+      (room.paintFlags || []).find(flag => {
+        return flag.team === player.carryingFlagTeam;
+      });
+
+    if (!carriedFlag) {
+      continue;
+    }
+  }
+}
+
+function drawCarriedFlag(
+  ctx,
+  player,
+  cx,
+  cy
+) {
+  if (!player.carryingFlagTeam) {
+    return;
+  }
+
+  const color =
+    player.carryingFlagTeam === 1
+      ? "#4da3ff"
+      : "#ff4d4d";
+
+  ctx.save();
+
+  ctx.strokeStyle = "#eeeeee";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(cx + 11, cy + 8);
+  ctx.lineTo(cx + 11, cy - 25);
+  ctx.stroke();
+
+  ctx.fillStyle = color;
+
+  ctx.beginPath();
+  ctx.moveTo(cx + 12, cy - 24);
+  ctx.lineTo(cx + 28, cy - 18);
+  ctx.lineTo(cx + 12, cy - 11);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function drawPaintProjectiles(ctx, room) {
   if (room.gameMode !== "paintball") {
     return;
@@ -299,25 +482,31 @@ function drawPaintProjectiles(ctx, room) {
   }
 }
 
-function drawPaintGun(ctx, player, cx, cy) {
-  const direction =
-    player.lastDirection || "right";
+function drawPaintGun(
+  ctx,
+  player,
+  cx,
+  cy
+) {
+  const angle =
+    Number.isFinite(player.aimAngle)
+      ? player.aimAngle
+      : 0;
 
-  const delta = {
-    up: { x: 0, y: -1 },
-    down: { x: 0, y: 1 },
-    left: { x: -1, y: 0 },
-    right: { x: 1, y: 0 }
-  }[direction];
+  const directionX = Math.cos(angle);
+  const directionY = Math.sin(angle);
 
-  if (!delta) {
-    return;
-  }
+  const startX =
+    cx + directionX * 7;
 
-  const startX = cx + delta.x * 7;
-  const startY = cy + delta.y * 7;
-  const endX = cx + delta.x * 20;
-  const endY = cy + delta.y * 20;
+  const startY =
+    cy + directionY * 7;
+
+  const endX =
+    cx + directionX * 22;
+
+  const endY =
+    cy + directionY * 22;
 
   ctx.save();
 
@@ -334,8 +523,15 @@ function drawPaintGun(ctx, player, cx, cy) {
   ctx.stroke();
 
   ctx.fillStyle = "#1d1d1d";
+
   ctx.beginPath();
-  ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+  ctx.arc(
+    endX,
+    endY,
+    4,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
 
   ctx.restore();
@@ -2210,6 +2406,13 @@ function drawPlayers(
       isMoving
     );
 
+    drawCarriedFlag(
+      ctx,
+      player,
+      cx,
+      cy
+    );
+
     ctx.restore();
   }
 }
@@ -2748,6 +2951,129 @@ function Game({ socket, room, myPlayer }) {
   }, [socket]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+
+    if (!canvas || !isPaintball) {
+      return;
+    }
+
+    function updateAimFromMouse(event) {
+      const currentRoom = roomRef.current;
+
+      const localPlayer =
+        currentRoom?.players?.find(player => {
+          return player.id === socket.id;
+        });
+
+      const visual =
+        localPlayer
+          ? visualPlayersRef.current.get(
+              localPlayer.id
+            )
+          : null;
+
+      if (!localPlayer || !visual) {
+        return;
+      }
+
+      const rect =
+        canvas.getBoundingClientRect();
+
+      const scaleX =
+        canvas.width / rect.width;
+
+      const scaleY =
+        canvas.height / rect.height;
+
+      const mouseX =
+        (event.clientX - rect.left) *
+        scaleX;
+
+      const mouseY =
+        (event.clientY - rect.top) *
+        scaleY;
+
+      const playerX =
+        visual.x * TILE + TILE / 2;
+
+      const playerY =
+        visual.y * TILE + TILE / 2;
+
+      const angle =
+        Math.atan2(
+          mouseY - playerY,
+          mouseX - playerX
+        );
+
+      mouseAimRef.current = {
+        x: mouseX,
+        y: mouseY,
+        angle
+      };
+
+      const now = performance.now();
+
+      if (
+        now -
+          lastAimSentAtRef.current >=
+        45
+      ) {
+        lastAimSentAtRef.current = now;
+
+        socket.emit(
+          "aimPaint",
+          angle
+        );
+      }
+    }
+
+    function handleMouseDown(event) {
+      if (event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+      socket.emit("shootPaint");
+    }
+
+    function handleContextMenu(event) {
+      event.preventDefault();
+    }
+
+    canvas.addEventListener(
+      "mousemove",
+      updateAimFromMouse
+    );
+
+    canvas.addEventListener(
+      "mousedown",
+      handleMouseDown
+    );
+
+    canvas.addEventListener(
+      "contextmenu",
+      handleContextMenu
+    );
+
+    return () => {
+      canvas.removeEventListener(
+        "mousemove",
+        updateAimFromMouse
+      );
+
+      canvas.removeEventListener(
+        "mousedown",
+        handleMouseDown
+      );
+
+      canvas.removeEventListener(
+        "contextmenu",
+        handleContextMenu
+      );
+    };
+  }, [isPaintball, socket]);
+
+  useEffect(() => {
     roomRef.current = room;
 
     const mapCacheKey = JSON.stringify({
@@ -2860,7 +3186,23 @@ lastRenderTime = currentTime;
     canvas
   );
 }
-      if (!isPaintball) {
+      if (isPaintball) {
+        drawPaintFlags(
+          ctx,
+          currentRoom,
+          currentTime
+        );
+
+        drawPaintTires(
+          ctx,
+          currentRoom
+        );
+
+        drawPowerUps(
+          ctx,
+          currentRoom
+        );
+      } else {
         drawPowerUps(
           ctx,
           currentRoom
@@ -2986,6 +3328,12 @@ lastRenderTime = currentTime;
             </span>
 
             <span>
+              🚩 {room.paintFlagScores?.player1 || 0}
+              {" x "}
+              {room.paintFlagScores?.player2 || 0}
+            </span>
+
+            <span>
               ❤️ {myPlayer?.paintHealth ?? 5}
             </span>
 
@@ -2996,6 +3344,18 @@ lastRenderTime = currentTime;
 
             {myPlayer?.paintReloading && (
               <span>🔄 Recarregando...</span>
+            )}
+
+            {myPlayer?.paintArmor && (
+              <span>🦺 Colete</span>
+            )}
+
+            {myPlayer?.paintRapidFire && (
+              <span>⚡ Tiro rápido</span>
+            )}
+
+            {myPlayer?.paintHeavyShot && (
+              <span>💥 Tiro pesado</span>
             )}
           </>
         ) : (
@@ -3034,7 +3394,7 @@ lastRenderTime = currentTime;
 
         <span>
           {isPaintball
-            ? "WASD / Setas • Espaço atira • R recarrega"
+            ? "WASD move • Mouse mira • Clique atira • R recarrega"
             : "WASD / Setas • Espaço"}
         </span>
       </div>
@@ -3093,7 +3453,7 @@ lastRenderTime = currentTime;
 
       {isPaintball && (
         <div className="paintInstructions">
-          🎯 Espaço para atirar • R para recarregar • Elimine o adversário
+          🎯 Mouse mira • Clique ou Espaço atira • R recarrega • Capture a bandeira
         </div>
       )}
 
@@ -3134,7 +3494,7 @@ lastRenderTime = currentTime;
                 : room.winner === "Bots"
                   ? "BOTS VENCERAM"
                   : isPaintball
-                    ? `🎯 ${room.winner} venceu o duelo de Paintball`
+                    ? `🚩 ${room.winner} venceu a Captura da Bandeira`
                     : `${room.winner} venceu`}
           </h2>
 
