@@ -2051,9 +2051,16 @@ function drawHunters(
   }
 }
 
-function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
+function drawPlayers(
+  ctx,
+  room,
+  visualPlayers,
+  currentTime,
+  interpolation
+) {
   for (const player of room.players || []) {
-    let visual = visualPlayers.get(player.id);
+    let visual =
+      visualPlayers.get(player.id);
 
     if (!visual) {
       visual = {
@@ -2063,35 +2070,68 @@ function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
         targetY: player.y
       };
 
-      visualPlayers.set(player.id, visual);
+      visualPlayers.set(
+        player.id,
+        visual
+      );
     }
 
     const distanceToTarget =
-      Math.abs(visual.targetX - visual.x) +
-      Math.abs(visual.targetY - visual.y);
+      Math.abs(
+        visual.targetX - visual.x
+      ) +
+      Math.abs(
+        visual.targetY - visual.y
+      );
 
     if (distanceToTarget > 1.5) {
       visual.x = visual.targetX;
       visual.y = visual.targetY;
     } else {
-      visual.x += (visual.targetX - visual.x) * interpolation;
-      visual.y += (visual.targetY - visual.y) * interpolation;
+      visual.x +=
+        (visual.targetX - visual.x) *
+        interpolation;
+
+      visual.y +=
+        (visual.targetY - visual.y) *
+        interpolation;
     }
 
-    if (Math.abs(visual.targetX - visual.x) < 0.001) {
+    if (
+      Math.abs(
+        visual.targetX - visual.x
+      ) < 0.001
+    ) {
       visual.x = visual.targetX;
     }
 
-    if (Math.abs(visual.targetY - visual.y) < 0.001) {
+    if (
+      Math.abs(
+        visual.targetY - visual.y
+      ) < 0.001
+    ) {
       visual.y = visual.targetY;
     }
 
     const isMoving =
-      Math.abs(visual.targetX - visual.x) > 0.01 ||
-      Math.abs(visual.targetY - visual.y) > 0.01;
+      Math.abs(
+        visual.targetX - visual.x
+      ) > 0.01 ||
+      Math.abs(
+        visual.targetY - visual.y
+      ) > 0.01;
 
-    const cx = visual.x * TILE + TILE / 2;
-    const cy = visual.y * TILE + TILE / 2;
+    const cx =
+      visual.x * TILE + TILE / 2;
+
+    const cy =
+      visual.y * TILE + TILE / 2;
+
+    ctx.save();
+
+    if (player.respawning) {
+      ctx.globalAlpha = 0.3;
+    }
 
     drawStickman(
       ctx,
@@ -2102,23 +2142,7 @@ function drawPlayers(ctx, room, visualPlayers, currentTime, interpolation) {
       isMoving
     );
 
-    drawPowerUps(ctx, currentRoom);
-
-drawHunters(
-  ctx,
-  currentRoom,
-  currentTime
-);
-
-drawExplosions(ctx, currentRoom);
-
-drawPlayers(
-  ctx,
-  currentRoom,
-  visualPlayersRef.current,
-  currentTime,
-  interpolation
-);
+    ctx.restore();
   }
 }
 
