@@ -2812,7 +2812,11 @@ function Game({ socket, room, myPlayer }) {
   event.preventDefault();
 
   if (isPaintball) {
-    socket.emit("shootPaint");
+    socket.emit(
+      "shootPaint",
+      mouseAimRef.current.angle
+    );
+
     return;
   }
 
@@ -3033,7 +3037,11 @@ function Game({ socket, room, myPlayer }) {
       }
 
       event.preventDefault();
-      socket.emit("shootPaint");
+
+      socket.emit(
+        "shootPaint",
+        mouseAimRef.current.angle
+      );
     }
 
     function handleContextMenu(event) {
@@ -3242,13 +3250,36 @@ lastRenderTime = currentTime;
             continue;
           }
 
+          const drawPlayer =
+            player.id === socket.id
+              ? {
+                  ...player,
+                  aimAngle:
+                    mouseAimRef.current.angle
+                }
+              : player;
+
           drawPaintGun(
             ctx,
-            player,
+            drawPlayer,
             visual.x * TILE + TILE / 2,
             visual.y * TILE + TILE / 2
           );
         }
+
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(
+          mouseAimRef.current.x,
+          mouseAimRef.current.y,
+          4,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+        ctx.restore();
       } else {
         drawBombs(
           ctx,
