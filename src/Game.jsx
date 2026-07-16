@@ -131,21 +131,105 @@ function drawIceBox(ctx, px, py) {
   ctx.lineWidth = 1;
 }
 
+function drawLavaWall(ctx, px, py) {
+  const centerX = px + TILE / 2;
+  const centerY = py + TILE / 2;
+
+  ctx.save();
+
+  ctx.fillStyle = "#211820";
+  ctx.strokeStyle = "#090609";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(px + 4, py + TILE - 5);
+  ctx.lineTo(px + 8, py + 12);
+  ctx.lineTo(centerX - 7, py + 4);
+  ctx.lineTo(centerX, py + 12);
+  ctx.lineTo(centerX + 8, py + 3);
+  ctx.lineTo(px + TILE - 7, py + 14);
+  ctx.lineTo(px + TILE - 4, py + TILE - 5);
+  ctx.closePath();
+
+  ctx.fill();
+  ctx.stroke();
+
+  // Rachaduras de magma
+  ctx.strokeStyle = "#ff5a00";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(centerX - 7, centerY - 14);
+  ctx.lineTo(centerX - 2, centerY - 4);
+  ctx.lineTo(centerX - 8, centerY + 5);
+
+  ctx.moveTo(centerX + 9, centerY - 10);
+  ctx.lineTo(centerX + 3, centerY);
+  ctx.lineTo(centerX + 9, centerY + 12);
+
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawLavaBox(ctx, px, py) {
+  const centerX = px + TILE / 2;
+  const centerY = py + TILE / 2;
+
+  ctx.save();
+
+  ctx.fillStyle = "#49302d";
+  ctx.strokeStyle = "#1b1010";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(px + 8, py + 37);
+  ctx.lineTo(px + 6, py + 18);
+  ctx.lineTo(px + 15, py + 7);
+  ctx.lineTo(px + 31, py + 5);
+  ctx.lineTo(px + 41, py + 17);
+  ctx.lineTo(px + 38, py + 39);
+  ctx.closePath();
+
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.strokeStyle = "#ff7a00";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(centerX - 7, centerY - 11);
+  ctx.lineTo(centerX, centerY - 3);
+  ctx.lineTo(centerX - 5, centerY + 9);
+
+  ctx.moveTo(centerX + 9, centerY - 7);
+  ctx.lineTo(centerX + 3, centerY + 2);
+  ctx.lineTo(centerX + 9, centerY + 11);
+
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawMap(ctx, room, canvas) {
   const theme = room.mapTheme || "classic";
 
   const floorColor =
-    theme === "forest"
-      ? "#315c2b"
-      : theme === "ice"
-        ? "#8ed4ea"
+  theme === "forest"
+    ? "#315c2b"
+    : theme === "ice"
+      ? "#8ed4ea"
+      : theme === "lava"
+        ? "#2a1715"
         : "#2a2a2a";
 
   const gridColor =
-    theme === "forest"
-      ? "#264b22"
-      : theme === "ice"
-        ? "#72bed8"
+  theme === "forest"
+    ? "#264b22"
+    : theme === "ice"
+      ? "#72bed8"
+      : theme === "lava"
+        ? "#55231b"
         : "#333333";
 
   ctx.fillStyle = floorColor;
@@ -161,24 +245,28 @@ function drawMap(ctx, room, canvas) {
       ctx.strokeRect(px, py, TILE, TILE);
 
       if (tile === "#") {
-        if (theme === "forest") {
-          drawForestWall(ctx, px, py);
-        } else if (theme === "ice") {
-          drawIceWall(ctx, px, py);
-        } else {
-          drawClassicWall(ctx, px, py);
-        }
-      }
+  if (theme === "forest") {
+    drawForestWall(ctx, px, py);
+  } else if (theme === "ice") {
+    drawIceWall(ctx, px, py);
+  } else if (theme === "lava") {
+    drawLavaWall(ctx, px, py);
+  } else {
+    drawClassicWall(ctx, px, py);
+  }
+}
 
       if (tile === "x") {
-        if (theme === "forest") {
-          drawForestBox(ctx, px, py);
-        } else if (theme === "ice") {
-          drawIceBox(ctx, px, py);
-        } else {
-          drawClassicBox(ctx, px, py);
-        }
-      }
+  if (theme === "forest") {
+    drawForestBox(ctx, px, py);
+  } else if (theme === "ice") {
+    drawIceBox(ctx, px, py);
+  } else if (theme === "lava") {
+    drawLavaBox(ctx, px, py);
+  } else {
+    drawClassicBox(ctx, px, py);
+  }
+}
     }
   }
 }
@@ -208,17 +296,41 @@ function drawPowerUps(ctx, room) {
 }
 
 function drawExplosions(ctx, room) {
-  const iceTheme = room.mapTheme === "ice";
+  const iceTheme =
+    room.mapTheme === "ice";
+
+  const lavaTheme =
+    room.mapTheme === "lava";
 
   for (const explosion of room.explosions || []) {
     const px = explosion.x * TILE;
     const py = explosion.y * TILE;
 
-    ctx.fillStyle = iceTheme ? "#d9f7ff" : "#ffd400";
-    ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
+    ctx.fillStyle = iceTheme
+      ? "#d9f7ff"
+      : lavaTheme
+        ? "#fff176"
+        : "#ffd400";
 
-    ctx.fillStyle = iceTheme ? "#4fc3f7" : "#ff6b00";
-    ctx.fillRect(px + 12, py + 12, TILE - 24, TILE - 24);
+    ctx.fillRect(
+      px + 3,
+      py + 3,
+      TILE - 6,
+      TILE - 6
+    );
+
+    ctx.fillStyle = iceTheme
+      ? "#4fc3f7"
+      : lavaTheme
+        ? "#ff2400"
+        : "#ff6b00";
+
+    ctx.fillRect(
+      px + 12,
+      py + 12,
+      TILE - 24,
+      TILE - 24
+    );
   }
 }
 
@@ -1417,6 +1529,280 @@ function drawNarutoSkin(
   ctx.stroke();
 }
 
+function drawRickSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  ctx.save();
+
+  // Cabelo azul espetado
+  ctx.fillStyle = "#9ee7ef";
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 11, headY - 2);
+  ctx.lineTo(cx - 17, headY - 12);
+  ctx.lineTo(cx - 8, headY - 10);
+  ctx.lineTo(cx - 5, headY - 20);
+  ctx.lineTo(cx, headY - 12);
+  ctx.lineTo(cx + 6, headY - 21);
+  ctx.lineTo(cx + 8, headY - 10);
+  ctx.lineTo(cx + 17, headY - 13);
+  ctx.lineTo(cx + 11, headY - 2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#d7c5a5";
+  ctx.beginPath();
+  ctx.arc(cx, headY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Jaleco
+  ctx.strokeStyle = "#eeeeee";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Camisa azul
+  ctx.strokeStyle = "#77b9c8";
+  ctx.lineWidth = 4;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  // Braços
+  ctx.strokeStyle = "#eeeeee";
+  ctx.lineWidth = 6;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(cx - 12, shoulderY + 7 + swing);
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(cx + 12, shoulderY + 7 - swing);
+  ctx.stroke();
+
+  // Pernas
+  ctx.strokeStyle = "#6d4c41";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(cx - 9, hipY + 13 - swing);
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(cx + 9, hipY + 13 + swing);
+  ctx.stroke();
+
+  // Olhos
+  ctx.fillStyle = "#111";
+
+  ctx.beginPath();
+  ctx.arc(cx - 3, headY - 1, 1.3, 0, Math.PI * 2);
+  ctx.arc(cx + 3, headY - 1, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawMortySkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const {
+    swing,
+    headY,
+    shoulderY,
+    hipY
+  } = getWalkPose(
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+
+  ctx.save();
+
+  // Cabelo
+  ctx.fillStyle = "#5d351f";
+
+  ctx.beginPath();
+  ctx.arc(
+    cx,
+    headY - 4,
+    9,
+    Math.PI,
+    Math.PI * 2
+  );
+  ctx.fill();
+
+  // Cabeça
+  ctx.fillStyle = "#edbd8f";
+
+  ctx.beginPath();
+  ctx.arc(cx, headY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Camiseta amarela
+  ctx.strokeStyle = "#f5d547";
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx, headY + 7);
+  ctx.lineTo(cx, hipY);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(cx - 12, shoulderY + 7 + swing);
+
+  ctx.moveTo(cx, shoulderY);
+  ctx.lineTo(cx + 12, shoulderY + 7 - swing);
+  ctx.stroke();
+
+  // Calça azul
+  ctx.strokeStyle = "#4f78a8";
+  ctx.lineWidth = 6;
+
+  ctx.beginPath();
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(cx - 9, hipY + 13 - swing);
+
+  ctx.moveTo(cx, hipY);
+  ctx.lineTo(cx + 9, hipY + 13 + swing);
+  ctx.stroke();
+
+  // Olhos assustados
+  ctx.fillStyle = "#ffffff";
+
+  ctx.beginPath();
+  ctx.arc(cx - 3, headY, 2.4, 0, Math.PI * 2);
+  ctx.arc(cx + 3, headY, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#111";
+
+  ctx.beginPath();
+  ctx.arc(cx - 3, headY, 1, 0, Math.PI * 2);
+  ctx.arc(cx + 3, headY, 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawPickleRickSkin(
+  ctx,
+  player,
+  cx,
+  cy,
+  currentTime,
+  isMoving
+) {
+  const phase = currentTime / 90;
+
+  const swing =
+    isMoving
+      ? Math.sin(phase) * 5
+      : 0;
+
+  const bob =
+    isMoving
+      ? Math.abs(Math.sin(phase))
+      : 0;
+
+  ctx.save();
+
+  // Corpo de picles
+  ctx.fillStyle = "#4f9f38";
+  ctx.strokeStyle = "#255e25";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.roundRect(
+    cx - 9,
+    cy - 27 - bob,
+    18,
+    43,
+    9
+  );
+  ctx.fill();
+  ctx.stroke();
+
+  // Marcas do picles
+  ctx.fillStyle = "#2e752c";
+
+  ctx.beginPath();
+  ctx.arc(cx - 4, cy - 11 - bob, 2, 0, Math.PI * 2);
+  ctx.arc(cx + 5, cy + 5 - bob, 2, 0, Math.PI * 2);
+  ctx.arc(cx - 3, cy + 10 - bob, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Olhos
+  ctx.fillStyle = "#ffffff";
+
+  ctx.beginPath();
+  ctx.arc(cx - 4, cy - 17 - bob, 2.5, 0, Math.PI * 2);
+  ctx.arc(cx + 4, cy - 17 - bob, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#111";
+
+  ctx.beginPath();
+  ctx.arc(cx - 4, cy - 17 - bob, 1, 0, Math.PI * 2);
+  ctx.arc(cx + 4, cy - 17 - bob, 1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Braços
+  ctx.strokeStyle = "#4f9f38";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(cx - 7, cy - 3);
+  ctx.lineTo(cx - 15, cy + 5 + swing);
+
+  ctx.moveTo(cx + 7, cy - 3);
+  ctx.lineTo(cx + 15, cy + 5 - swing);
+  ctx.stroke();
+
+  // Pernas
+  ctx.beginPath();
+  ctx.moveTo(cx - 4, cy + 14);
+  ctx.lineTo(cx - 8, cy + 22 - swing);
+
+  ctx.moveTo(cx + 4, cy + 14);
+  ctx.lineTo(cx + 8, cy + 22 + swing);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawStickman(
   ctx,
   player,
@@ -1489,6 +1875,33 @@ function drawStickman(
   );
 } else if (skin === "naruto") {
   drawNarutoSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+  } else if (skin === "rick") {
+  drawRickSkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "morty") {
+  drawMortySkin(
+    ctx,
+    player,
+    cx,
+    cy,
+    currentTime,
+    isMoving
+  );
+} else if (skin === "pickleRick") {
+  drawPickleRickSkin(
     ctx,
     player,
     cx,

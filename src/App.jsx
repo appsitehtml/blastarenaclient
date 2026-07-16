@@ -148,6 +148,10 @@ function App() {
                 <option value="ice">
                   ❄️ Gelo
                 </option>
+
+                <option value="lava">
+  🌋 Lava
+</option>
               </select>
             </div>
 
@@ -195,6 +199,18 @@ function App() {
 
 <option value="naruto">
   🍥 Naruto
+</option>
+
+<option value="rick">
+  🧪 Rick
+</option>
+
+<option value="morty">
+  😰 Morty
+</option>
+
+<option value="pickleRick">
+  🥒 Pickle Rick
 </option>
               </select>
             </div>
@@ -284,10 +300,12 @@ function App() {
         <p>
           Mapa:{" "}
           {room.mapTheme === "forest"
-            ? "🌲 Floresta"
-            : room.mapTheme === "ice"
-              ? "❄️ Gelo"
-              : "🏭 Clássico"}
+  ? "🌲 Floresta"
+  : room.mapTheme === "ice"
+    ? "❄️ Gelo"
+    : room.mapTheme === "lava"
+      ? "🌋 Lava"
+      : "🏭 Clássico"}
         </p>
 
         <p>
